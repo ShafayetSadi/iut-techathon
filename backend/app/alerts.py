@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import datetime, time, timedelta
 
 from .clock import BUSINESS_TZ, iso_now, utc_now
 from .config import settings
@@ -13,6 +13,10 @@ def _parse_hhmm(value: str) -> time:
 def _is_after_hours() -> bool:
     local_time = utc_now().astimezone(BUSINESS_TZ).time()
     return not (_parse_hhmm(settings.office_open) <= local_time <= _parse_hhmm(settings.office_close))
+
+
+def _parse_iso_utc(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
 def build_alerts(devices: list[dict]) -> list[dict]:
@@ -39,16 +43,18 @@ def build_alerts(devices: list[dict]) -> list[dict]:
             )
 
         if len(loads) == 5 and len(on_loads) == 5:
-            alerts.append(
-                {
-                    "id": f"long_on-{room}-{now[:13]}",
-                    "type": "long_on",
-                    "room": room,
-                    "message": f"All fans and lights in {display_name} have been ON for more than 2 hours.",
-                    "since": min(device["last_changed"] for device in on_loads),
-                    "timestamp": now,
-                }
-            )
+            since = min(device["last_changed"] for device in on_loads)
+            if utc_now() - _parse_iso_utc(since) > timedelta(hours=2):
+                alerts.append(
+                    {
+                        "id": f"long_on-{room}-{now[:13]}",
+                        "type": "long_on",
+                        "room": room,
+                        "message": f"All fans and lights in {display_name} have been ON for more than 2 hours.",
+                        "since": since,
+                        "timestamp": now,
+                    }
+                )
 
         if controller and controller["status"] == "offline":
             alerts.append(
