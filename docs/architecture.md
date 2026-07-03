@@ -140,15 +140,16 @@ powers the trend chart and lets us survive restarts.
 | Column          | Type                | Notes                                 |
 | --------------- | ------------------- | ------------------------------------- |
 | `id`            | TEXT PK             | Deterministic, e.g. `work1-fan-1`     |
-| `type`          | TEXT                | `fan` \| `light`                      |
+| `type`          | TEXT                | `fan` \| `light` \| `controller`      |
 | `label`         | TEXT                | `Fan 1`, `Light 3`                    |
 | `room`          | TEXT                | `drawing` \| `work1` \| `work2`       |
-| `status`        | TEXT                | `on` \| `off`                         |
-| `power_rated_w` | INT                 | Rated draw when ON (fan 60, light 15) |
+| `status`        | TEXT                | Fans/lights: `on` \| `off`; controllers: `online` \| `offline` |
+| `power_rated_w` | INT                 | Rated draw when ON (fan 60, light 15, controller 0) |
 | `last_changed`  | TEXT (ISO 8601 UTC) | Updated only when `status` flips      |
 
-`power_w` in responses is **derived**: `power_rated_w if status=='on' else 0`. We store the rated
-value, not the current one, so there's a single truth.
+`power_w` in responses is **derived**: fans/lights use `power_rated_w if status=='on' else 0`;
+controllers always return `0`. We store the rated value, not the current one, so there's a single
+truth.
 
 ### `state_events` (history)
 
@@ -157,7 +158,7 @@ value, not the current one, so there's a single truth.
 | `id`            | INT PK autoincr     |                                   |
 | `ts`            | TEXT (ISO 8601 UTC) | When the sample was taken         |
 | `total_power_w` | INT                 | Whole-office draw at that instant |
-| `devices_on`    | INT                 | Count of ON devices               |
+| `loads_on`      | INT                 | Count of ON fans/lights           |
 
 The simulator appends one `state_events` row **every tick** (a lightweight time-series). `GET
 /api/history` reads the last N rows for the chart. `today_kwh` is computed by integrating these
@@ -169,7 +170,7 @@ samples over the current day.
 
 ```text
 rooms   = ["drawing", "work1", "work2"]
-per room: fan-1, fan-2 (60W each), light-1, light-2, light-3 (15W each)
+per room: fan-1, fan-2 (60W each), light-1, light-2, light-3 (15W each), controller-1 (0W)
 id      = f"{room}-{type}-{n}"      e.g. "drawing-light-2"
 label   = f"{Type} {n}"             e.g. "Light 2"
 ```
@@ -236,9 +237,9 @@ All timestamps are **ISO 8601 UTC**. All responses are JSON.
 | Method | Path                       | Returns                                                                     |
 | ------ | -------------------------- | --------------------------------------------------------------------------- |
 | GET    | `/api/devices`             | `{ "devices": [Device, …18] }`                                              |
-| GET    | `/api/rooms/{room}`        | `{ "room": "work1", "devices": [...], "power_w": 135, "devices_on": 3 }`    |
+| GET    | `/api/rooms/{room}`        | `{ "room": "work1", "devices": [...], "power_w": 135, "loads_on": 3, "controllers_online": 1 }` |
 | GET    | `/api/summary`             | see below                                                                   |
-| GET    | `/api/history?minutes=30`  | `{ "points": [{ "ts": "...", "total_power_w": 740, "devices_on": 9 }, …] }` |
+| GET    | `/api/history?minutes=30`  | `{ "points": [{ "ts": "...", "total_power_w": 375, "loads_on": 10 }, ...] }` |
 | GET    | `/api/alerts`              | `{ "alerts": [Alert, …] }`                                                  |
 | POST   | `/api/devices/{id}/toggle` | flips one device (demo helper) → updated `Device`                           |
 | POST   | `/api/demo/clock`          | body `{ "iso": "2026-07-03T22:00:00Z" }` or `{ "iso": null }` to reset      |
@@ -247,14 +248,16 @@ All timestamps are **ISO 8601 UTC**. All responses are JSON.
 
 ```json
 {
-  "total_power_w": 740,
+  "total_power_w": 375,
   "per_room": {
-    "drawing": { "power_w": 90, "devices_on": 3 },
-    "work1": { "power_w": 0, "devices_on": 0 },
-    "work2": { "power_w": 210, "devices_on": 5 }
+    "drawing": { "power_w": 75, "loads_on": 2, "controllers_online": 1 },
+    "work1": { "power_w": 135, "loads_on": 3, "controllers_online": 1 },
+    "work2": { "power_w": 165, "loads_on": 5, "controllers_online": 1 }
   },
   "today_kwh": 4.2,
-  "device_count_on": 8,
+  "load_count_on": 10,
+  "controllers_online": 3,
+  "device_count": 18,
   "server_time": "2026-07-03T14:22:10Z"
 }
 ```
@@ -264,7 +267,7 @@ All timestamps are **ISO 8601 UTC**. All responses are JSON.
 ```json
 {
   "id": "afterhours-work2-2026-07-03T22:00",
-  "type": "after_hours", // "after_hours" | "long_on"
+  "type": "after_hours", // "after_hours" | "long_on" | "controller_offline"
   "room": "work2",
   "message": "Work Room 2 has 2 fans and 3 lights ON at 10:00 PM.",
   "since": "2026-07-03T22:00:00Z",
@@ -306,10 +309,12 @@ Runs every tick in `alerts.py`, using `clock.now()` (so the demo override works)
 ### Rules
 
 1. **After-hours** (`after_hours`) — office hours are **09:00–17:00** local. If `now` is outside
-   that window and _any_ device in a room is ON, emit one alert per offending room.
-2. **Long-on room** (`long_on`) — if **all 6** devices in a room have been continuously ON for
+   that window and _any_ fan/light in a room is ON, emit one alert per offending room.
+2. **Long-on room** (`long_on`) — if **all 5 fans/lights** in a room have been continuously ON for
    **> 2 hours**, emit an alert for that room. "Continuously" is tracked from the _oldest_
-   `last_changed` among the room's devices while all are ON.
+   `last_changed` among the room's fans/lights while all are ON.
+3. **Controller offline** (`controller_offline`) — if a room controller is offline, emit an alert
+   for that room.
 
 ### Lifecycle & dedup
 
@@ -492,7 +497,7 @@ tick loop flips work1-light-2 OFF → writes DB (last_changed updated)
 - **No real hardware.** Device data is simulated; the Wokwi schematic is a concept proof only.
 - **No authentication.** Single-tenant internal tool; anyone with the URL can view. (Out of scope
   for the prelim.)
-- **Fixed office.** Exactly 3 rooms × (2 fans + 3 lights) = 18 devices; layout matches the PDF and
+- **Fixed office.** Exactly 3 rooms × (2 fans + 3 lights + 1 controller) = 18 devices; layout matches the PDF and
   is not user-editable.
 - **Power figures are nominal** (fan 60W, light 15W) — realistic, not metered.
 - **`today_kwh`** is an estimate integrated from tick samples, reset at local midnight.

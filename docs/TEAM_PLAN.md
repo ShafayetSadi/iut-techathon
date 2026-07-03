@@ -2,8 +2,8 @@
 
 ## Context
 
-We're building the boss's office-monitoring system: 18 simulated devices (2 fans + 3 lights ×
-3 rooms) whose live state flows through **one shared backend** to both a **real-time web
+We're building the boss's office-monitoring system: 18 simulated devices (2 fans + 3 lights + 1
+controller × 3 rooms) whose live state flows through **one shared backend** to both a **real-time web
 dashboard** and an **LLM-powered Discord bot**. No real hardware — data is simulated but must be
 dynamic (change over time). Deliverables also include a system diagram, a Wokwi/Tinkercad circuit
 schematic, a public repo with README, and a ≤3-min demo video.
@@ -53,11 +53,11 @@ This lives in `README.md` / `docs/api-contract.md` so Arif and Jifat build again
 ```json
 {
   "id": "work1-fan-1",
-  "type": "fan", // "fan" | "light"
+  "type": "fan", // "fan" | "light" | "controller"
   "label": "Fan 1",
   "room": "work1", // "drawing" | "work1" | "work2"
-  "status": "on", // "on" | "off"
-  "power_w": 60, // watts when on (fan 60, light 15); 0 when off
+  "status": "on", // fans/lights: "on" | "off"; controllers: "online" | "offline"
+  "power_w": 60, // fan/light watts when on; controllers report 0
   "last_changed": "2026-07-03T14:22:10Z"
 }
 ```
@@ -66,7 +66,7 @@ This lives in `README.md` / `docs/api-contract.md` so Arif and Jifat build again
 
 - `GET /api/devices` → all 18 devices
 - `GET /api/rooms/{room}` → devices + totals for one room
-- `GET /api/summary` → `{ total_power_w, per_room: {...}, today_kwh, device_count_on }`
+- `GET /api/summary` → `{ total_power_w, per_room: {...}, today_kwh, load_count_on, controllers_online }`
 - `GET /api/alerts` → active alerts `[{ id, type, message, room, timestamp }]`
 - (optional) `POST /api/devices/{id}/toggle` → lets the demo/video force interesting states
 
@@ -75,8 +75,9 @@ simulator tick (e.g. every 2–3s) so the dashboard updates with **no page refre
 
 **Alert rules (defined once, in backend, shared by both UIs):**
 
-- **After-hours:** any device on outside 9 AM–5 PM.
-- **Long-on room:** all 6 devices in a room continuously on > 2 hours.
+- **After-hours:** any fan/light on outside 9 AM–5 PM.
+- **Long-on room:** all 5 fans/lights in a room continuously on > 2 hours.
+- **Controller offline:** a room controller is offline.
 - Every alert is timestamped.
 
 ---
@@ -85,10 +86,10 @@ simulator tick (e.g. every 2–3s) so the dashboard updates with **no page refre
 
 ### Saima — Backend (`/backend`, FastAPI)
 
-1. **Simulator engine** — in-memory store of 18 devices; a background task that flips random
+1. **Simulator engine** — SQLite-backed store of 18 devices; a background task that flips random
    device states on an interval and updates `last_changed`. Keep it plausible (don't flip all 18
    every tick). Track a running `today_kwh` accumulator (power × elapsed time).
-2. **REST endpoints** above, reading from the single in-memory store.
+2. **REST endpoints** above, reading from the single SQLite source of truth.
 3. **WebSocket broadcaster** — on each tick, push the snapshot to all connected clients.
 4. **Alerts engine** — recompute after-hours + long-on-room alerts each tick; expose via
    `/api/alerts` and include in the WS snapshot. Add a way to simulate "it's 10 PM" for the demo
@@ -129,7 +130,7 @@ _Deliver a stub of `/api/devices` + `/ws` within the first day so Arif and Jifat
 ### Sadi — Circuit + Diagrams + Integration (`/docs`, `/hardware`)
 
 1. **Circuit schematic (Wokwi, ESP32)** — one representative room: ESP32 reading on/off state of
-   2 fans + 3 lights (buttons/switches as inputs, LEDs/relays as device stand-ins), optionally a
+   2 fans + 3 lights connected to one controller (buttons/switches as inputs, LEDs/relays as device stand-ins), optionally a
    current-sense concept (e.g. ACS712 symbol) for power draw. Must make physical sense; label
    everything. Export image + share link into `/docs`. _Tip from the PDF: try both Wokwi and
    Tinkercad first — Wokwi tends to pair better with AI-assisted iteration._
