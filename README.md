@@ -29,6 +29,7 @@ disagree.
 iut-techathon/
 ├── backend/       FastAPI + SQLite API
 ├── frontend/      React + Vite dashboard
+├── hardware/      Wokwi ESP32 schematic (concept for one room)
 ├── docs/          Team plan, architecture, fixed API contract, problem statement
 └── README.md
 ```
@@ -37,7 +38,6 @@ Planned folders:
 
 ```text
 bot/               Discord bot using REST API
-hardware/          Wokwi/Tinkercad schematic assets
 ```
 
 ## Fixed Contract
@@ -84,6 +84,17 @@ The Vite dev server normally runs at `http://localhost:5173`.
 - Summary: `GET http://localhost:8000/api/summary`
 - Alerts: `GET http://localhost:8000/api/alerts`
 - WebSocket: `ws://localhost:8000/ws`
+
+## Hardware Schematic
+
+A Wokwi ESP32 schematic for one representative room (1 controller + 2 fans + 3 lights),
+proving how the devices would be sensed and switched in real life. It is a **concept/simulation
+only** and does not feed the running app — the live demo uses simulated data in the backend.
+
+![Representative room schematic](hardware/schematic.png)
+
+See [`hardware/README.md`](hardware/README.md) for the pin map, wiring rationale, and how to
+open it in Wokwi.
 
 ## Team Ownership
 
