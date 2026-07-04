@@ -17,12 +17,12 @@ def room_summary(room: str, devices: list[dict]) -> dict:
     }
 
 
-def build_summary(devices: list[dict], server_time: str) -> dict:
+def build_summary(devices: list[dict], server_time: str, today_kwh: float) -> dict:
     per_room = {room: room_summary(room, devices) for room in ROOMS}
     return {
         "total_power_w": sum(summary["power_w"] for summary in per_room.values()),
         "per_room": per_room,
-        "today_kwh": 0.0,
+        "today_kwh": today_kwh,
         "load_count_on": sum(summary["loads_on"] for summary in per_room.values()),
         "controllers_online": sum(summary["controllers_online"] for summary in per_room.values()),
         "device_count": len(devices),
