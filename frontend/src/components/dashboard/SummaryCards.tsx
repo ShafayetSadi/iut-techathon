@@ -9,11 +9,12 @@ interface Props {
 }
 
 /**
- * Five at-a-glance cards. Total Power is deliberately the loudest; the others
+ * Four at-a-glance cards. Total Power is deliberately the loudest; the others
  * stay quiet unless something needs attention (alerts turn orange/red).
  */
 export function SummaryCards({ summary, alertCount }: Props) {
-  const loadsTotal = 15 // 3 rooms × (2 fans + 3 lights)
+  // Total load count comes straight from the backend summary, never assumed.
+  const loadsTotal = summary.device_count
 
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

@@ -27,7 +27,9 @@ export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props)
           </h2>
           <p className="text-xs text-muted">Top-view live device map</p>
         </div>
-        <span className="text-xs text-faint">3 rooms · 15 devices</span>
+        <span className="text-xs text-faint">
+          {ROOM_ORDER.length} rooms · {summary.device_count} devices
+        </span>
       </header>
 
       <div className="grid flex-1 gap-3 md:grid-cols-3">
@@ -36,6 +38,7 @@ export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props)
           const roomSummary = summary.per_room[room]
           const fans = roomDevices.filter((d) => d.type === 'fan')
           const lights = roomDevices.filter((d) => d.type === 'light')
+          const loadsOn = roomSummary?.loads_on ?? 0
           const isBusiest = busiestRoom === room && (roomSummary?.power_w ?? 0) > 0
 
           return (
@@ -57,14 +60,23 @@ export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props)
                   </h3>
                   <p className="tnum text-xs text-muted">
                     {formatWatts(roomSummary?.power_w ?? 0)} ·{' '}
-                    {roomSummary?.loads_on ?? 0}/5 on
+                    {roomSummary?.loads_on ?? 0}/{roomSummary?.device_count ?? 0}{' '}
+                    on
                   </p>
                 </div>
                 <span
-                  className="inline-flex items-center gap-1 rounded-full bg-good/15 px-2 py-0.5 text-[10px] font-medium text-good"
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                    loadsOn > 0
+                      ? 'bg-amber/15 text-amber'
+                      : 'bg-white/5 text-faint'
+                  }`}
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-good" />
-                  Live
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      loadsOn > 0 ? 'bg-amber' : 'bg-slate'
+                    }`}
+                  />
+                  {loadsOn > 0 ? 'Active' : 'Idle'}
                 </span>
               </div>
 

@@ -7,6 +7,7 @@
 export type RoomId = 'drawing' | 'work1' | 'work2'
 export type DeviceType = 'fan' | 'light'
 
+/** Fans and lights use on|off. */
 export type DeviceStatus = 'on' | 'off'
 
 export type AlertType = 'after_hours' | 'long_on'

@@ -12,7 +12,7 @@ interface Props {
  * backend `status`:
  *  - light on  → warm amber glow
  *  - fan on    → icon spins
- * Off/inactive devices are muted slate. A hover card exposes the details.
+ * Off devices are muted slate. A hover card exposes the details.
  */
 export function DeviceIndicator({ device, onSelect }: Props) {
   const on = device.status === 'on'
@@ -71,27 +71,25 @@ function renderIcon(device: Device) {
     )
   }
 
-  if (device.type === 'light') {
-    const on = device.status === 'on'
-    return (
-      <span className="relative grid h-9 w-9 place-items-center">
-        {on && (
-          <span
-            className="absolute inset-0 rounded-full bg-amber/30 blur-md"
-            aria-hidden
-          />
-        )}
-        <Lightbulb
-          className={`relative h-7 w-7 ${
-            on ? 'text-amber drop-shadow-[0_0_6px_rgba(250,204,21,0.7)]' : 'text-slate'
-          }`}
-          strokeWidth={1.75}
-          fill={on ? 'rgba(250,204,21,0.35)' : 'none'}
+  // light
+  const on = device.status === 'on'
+  return (
+    <span className="relative grid h-9 w-9 place-items-center">
+      {on && (
+        <span
+          className="absolute inset-0 rounded-full bg-amber/30 blur-md"
+          aria-hidden
         />
-      </span>
-    )
-  }
-  return null
+      )}
+      <Lightbulb
+        className={`relative h-7 w-7 ${
+          on ? 'text-amber drop-shadow-[0_0_6px_rgba(250,204,21,0.7)]' : 'text-slate'
+        }`}
+        strokeWidth={1.75}
+        fill={on ? 'rgba(250,204,21,0.35)' : 'none'}
+      />
+    </span>
+  )
 }
 
 function statusColor(device: Device): string {

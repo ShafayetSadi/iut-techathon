@@ -63,13 +63,11 @@ export function deriveSummary(devices: Device[], serverTime: string): Summary {
     const r = rooms[d.room]
     if (!r) continue
     r.device_count += 1
-    if (isLoad(d)) {
-      if (d.status === 'on') {
-        total += d.power_w
-        loadsOn += 1
-        r.power_w += d.power_w
-        r.loads_on += 1
-      }
+    if (d.status === 'on') {
+      total += d.power_w
+      loadsOn += 1
+      r.power_w += d.power_w
+      r.loads_on += 1
     }
   }
 
