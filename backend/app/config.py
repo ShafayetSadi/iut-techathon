@@ -1,5 +1,11 @@
 from dataclasses import dataclass
+from pathlib import Path
 import os
+
+from dotenv import load_dotenv
+
+# Load backend/.env (robust to the current working directory) before reading env vars.
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 @dataclass(frozen=True)
@@ -13,6 +19,14 @@ class Settings:
     )
     office_open: str = os.getenv("OFFICE_OPEN", "09:00")
     office_close: str = os.getenv("OFFICE_CLOSE", "17:00")
+
+    # Discord bot + LLM (OpenRouter) settings.
+    discord_token: str = os.getenv("DISCORD_TOKEN", "")
+    bot_command_prefix: str = os.getenv("BOT_COMMAND_PREFIX", "!")
+    api_base: str = os.getenv("API_BASE", "http://localhost:8000")
+    openrouter_api_key: str = os.getenv("OPENROUTER_API_KEY", "")
+    openrouter_model: str = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-exp")
+    openrouter_base_url: str = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
     @property
     def sqlite_path(self) -> str:
