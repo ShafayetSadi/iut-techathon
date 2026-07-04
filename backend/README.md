@@ -41,13 +41,12 @@ Useful URLs:
 
 ## Device Model
 
-The backend seeds 18 devices into SQLite:
+The backend seeds 15 devices into SQLite:
 
 - 3 rooms: `drawing`, `work1`, `work2`.
-- Per room: `fan-1`, `fan-2`, `light-1`, `light-2`, `light-3`, `controller-1`.
+- Per room: `fan-1`, `fan-2`, `light-1`, `light-2`, `light-3`.
 - Fans/lights use `status: "on" | "off"`.
-- Controllers use `status: "online" | "offline"`.
-- Controllers report `power_w: 0`; only fans/lights affect power totals.
+- Only fans and lights are tracked devices.
 
 The public API contract is fixed in `../docs/api-contract.md`.
 
@@ -60,7 +59,7 @@ backend/
 │   ├── db.py            SQLite schema, seed data, device reads/writes
 │   ├── schemas.py       Pydantic request/response models
 │   ├── power.py         Room and office power summaries
-│   ├── alerts.py        after_hours, long_on, controller_offline alerts
+│   ├── alerts.py        after_hours and long_on alerts
 │   ├── simulator.py     Background tick loop scaffold
 │   ├── snapshot.py      Contract-shaped WebSocket snapshot builder
 │   ├── ws.py            WebSocket connection manager
@@ -83,13 +82,13 @@ Backend smoke:
 ```bash
 uv run python - <<'PY'
 from app.clock import iso_now
-from app.db import init_db, get_devices
+from app.db import get_today_kwh, init_db, get_devices
 from app.power import build_summary
 from app.snapshot import build_snapshot
 
 init_db()
 devices = get_devices()
-summary = build_summary(devices, iso_now())
+summary = build_summary(devices, iso_now(), get_today_kwh())
 snapshot = build_snapshot()
 print(len(devices))
 print(summary.keys())
@@ -99,11 +98,10 @@ PY
 
 Expected device counts:
 
-- 18 total devices.
+- 15 total devices.
 - 6 fans.
 - 9 lights.
-- 3 controllers.
-- 6 devices per room.
+- 5 devices per room.
 
 ## Runtime Files
 
