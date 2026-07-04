@@ -60,6 +60,20 @@ _task: asyncio.Task | None = None
 # enforce a cooldown so a flapping device (the simulator toggles loads every few seconds) can't
 # re-trigger the same alert every poll.
 _last_announced_at: dict[str, float] = {}
+# Set once we've warned that the alert channel is inaccessible, so we don't log it every poll.
+_channel_forbidden_warned = False
+
+
+def _warn_channel_forbidden_once() -> None:
+    global _channel_forbidden_warned
+    if not _channel_forbidden_warned:
+        logger.error(
+            "Cannot post alerts: the bot lacks access to ALERT_CHANNEL_ID %s (403 Forbidden). "
+            "In Discord, give the bot 'View Channel' + 'Send Messages' on that channel, or set "
+            "ALERT_CHANNEL_ID to a channel it can post in.",
+            settings.alert_channel_id,
+        )
+        _channel_forbidden_warned = True
 
 
 async def _ask_server(question: str, user: str) -> str:
@@ -137,6 +151,7 @@ async def ask(ctx: commands.Context, *, question: str = "") -> None:
 @tasks.loop(seconds=settings.alert_poll_seconds)
 async def alert_poller() -> None:
     """Post newly-triggered alerts to the designated channel, at most once per condition per cooldown."""
+    global _channel_forbidden_warned
     try:
         async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
             response = await client.get(f"{settings.api_base}/api/alerts")
@@ -167,6 +182,12 @@ async def alert_poller() -> None:
         try:
             await channel.send(f"⚠️ {alert.get('message', 'Alert triggered.')}")
             _last_announced_at[key] = now
+            _channel_forbidden_warned = False
+        except discord.Forbidden:
+            # Bot lacks access to the channel. Warn once (not every poll) with an actionable message,
+            # and don't record a cooldown so it starts posting as soon as permissions are fixed.
+            _warn_channel_forbidden_once()
+            return
         except Exception:  # noqa: BLE001
             logger.exception("Failed to post alert %s", alert.get("id"))
 
