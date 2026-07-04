@@ -131,9 +131,10 @@ _Deliver a stub of `/api/devices` + `/ws` within the first day so Arif and Jifat
 
 1. **Circuit schematic (Wokwi, ESP32)** — one representative room: ESP32 driving relay-switched
    stand-in loads for 2 fans + 3 lights connected to one controller, plus an analog current-sense
-   concept (ACS712 stand-in) for power draw. Must make physical sense; label everything. Export
-   image + share link into `/docs`. _Tip from the PDF: try both Wokwi and Tinkercad first — Wokwi
-   tends to pair better with AI-assisted iteration._
+   concept (ACS712 stand-in) for power draw. Treat the sensor as optional realism/bonus detail,
+   not the source of truth for the app's live power totals. Must make physical sense; label
+   everything. Export image + share link into `/docs`. _Tip from the PDF: try both Wokwi and
+   Tinkercad first — Wokwi tends to pair better with AI-assisted iteration._
 2. **System diagram (NOT Mermaid)** — use Excalidraw / draw.io / Figma. Show the full flow:
    `devices → simulated data → backend → (WebSocket) → dashboard  &&  (REST) → Discord bot → user`.
    Export PNG/SVG into `/docs`.

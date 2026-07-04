@@ -15,35 +15,35 @@
       "id": "relay_l1",
       "top": -150,
       "left": 540,
-      "attrs": { "label": "Light 1 Relay" }
+      "attrs": { "label": "AC Light 1 Relay" }
     },
     {
       "type": "wokwi-relay-module",
       "id": "relay_l2",
       "top": -30,
       "left": 540,
-      "attrs": { "label": "Light 2 Relay" }
+      "attrs": { "label": "AC Light 2 Relay" }
     },
     {
       "type": "wokwi-relay-module",
       "id": "relay_l3",
       "top": 90,
       "left": 540,
-      "attrs": { "label": "Light 3 Relay" }
+      "attrs": { "label": "AC Light 3 Relay" }
     },
     {
       "type": "wokwi-relay-module",
       "id": "relay_f1",
       "top": 210,
       "left": 540,
-      "attrs": { "label": "Fan 1 Relay" }
+      "attrs": { "label": "AC Fan 1 Relay" }
     },
     {
       "type": "wokwi-relay-module",
       "id": "relay_f2",
       "top": 330,
       "left": 540,
-      "attrs": { "label": "Fan 2 Relay" }
+      "attrs": { "label": "AC Fan 2 Relay" }
     },
     {
       "type": "wokwi-resistor",
@@ -85,42 +85,42 @@
       "id": "light1",
       "top": -112,
       "left": 910,
-      "attrs": { "color": "yellow", "label": "Light 1 Load" }
+      "attrs": { "color": "yellow", "label": "AC Light 1 (LED stand-in)" }
     },
     {
       "type": "wokwi-led",
       "id": "light2",
       "top": 8,
       "left": 910,
-      "attrs": { "color": "yellow", "label": "Light 2 Load" }
+      "attrs": { "color": "yellow", "label": "AC Light 2 (LED stand-in)" }
     },
     {
       "type": "wokwi-led",
       "id": "light3",
       "top": 128,
       "left": 910,
-      "attrs": { "color": "yellow", "label": "Light 3 Load" }
+      "attrs": { "color": "yellow", "label": "AC Light 3 (LED stand-in)" }
     },
     {
       "type": "wokwi-led",
       "id": "fan1",
       "top": 248,
       "left": 910,
-      "attrs": { "color": "cyan", "label": "Fan 1 Load" }
+      "attrs": { "color": "cyan", "label": "AC Fan 1 (LED stand-in)" }
     },
     {
       "type": "wokwi-led",
       "id": "fan2",
       "top": 368,
       "left": 910,
-      "attrs": { "color": "cyan", "label": "Fan 2 Load" }
+      "attrs": { "color": "cyan", "label": "AC Fan 2 (LED stand-in)" }
     },
     {
       "type": "wokwi-potentiometer",
       "id": "pot",
       "top": 470,
       "left": 240,
-      "attrs": { "label": "Current Sensor (ACS712 stand-in)" }
+      "attrs": { "label": "Current Sensor / ACS712 stand-in (optional)" }
     },
     {
       "type": "wokwi-text",
@@ -134,77 +134,77 @@
       "id": "label_rl1",
       "top": -185,
       "left": 540,
-      "attrs": { "text": "Light 1 Relay" }
+      "attrs": { "text": "AC Light 1 Relay" }
     },
     {
       "type": "wokwi-text",
       "id": "label_ll1",
       "top": -165,
       "left": 930,
-      "attrs": { "text": "Light 1 Load" }
+      "attrs": { "text": "AC Light 1 (LED stand-in)" }
     },
     {
       "type": "wokwi-text",
       "id": "label_rl2",
       "top": -65,
       "left": 540,
-      "attrs": { "text": "Light 2 Relay" }
+      "attrs": { "text": "AC Light 2 Relay" }
     },
     {
       "type": "wokwi-text",
       "id": "label_ll2",
       "top": -45,
       "left": 930,
-      "attrs": { "text": "Light 2 Load" }
+      "attrs": { "text": "AC Light 2 (LED stand-in)" }
     },
     {
       "type": "wokwi-text",
       "id": "label_rl3",
       "top": 55,
       "left": 540,
-      "attrs": { "text": "Light 3 Relay" }
+      "attrs": { "text": "AC Light 3 Relay" }
     },
     {
       "type": "wokwi-text",
       "id": "label_ll3",
       "top": 75,
       "left": 930,
-      "attrs": { "text": "Light 3 Load" }
+      "attrs": { "text": "AC Light 3 (LED stand-in)" }
     },
     {
       "type": "wokwi-text",
       "id": "label_rf1",
       "top": 175,
       "left": 540,
-      "attrs": { "text": "Fan 1 Relay" }
+      "attrs": { "text": "AC Fan 1 Relay" }
     },
     {
       "type": "wokwi-text",
       "id": "label_lf1",
       "top": 195,
       "left": 930,
-      "attrs": { "text": "Fan 1 Load" }
+      "attrs": { "text": "AC Fan 1 (LED stand-in)" }
     },
     {
       "type": "wokwi-text",
       "id": "label_rf2",
       "top": 295,
       "left": 540,
-      "attrs": { "text": "Fan 2 Relay" }
+      "attrs": { "text": "AC Fan 2 Relay" }
     },
     {
       "type": "wokwi-text",
       "id": "label_lf2",
       "top": 315,
       "left": 930,
-      "attrs": { "text": "Fan 2 Load" }
+      "attrs": { "text": "AC Fan 2 (LED stand-in)" }
     },
     {
       "type": "wokwi-text",
       "id": "label_sensor",
       "top": 440,
       "left": 180,
-      "attrs": { "text": "Current Sensor (ACS712 stand-in)" }
+      "attrs": { "text": "Current Sensor / ACS712 stand-in (optional)" }
     }
   ],
   "connections": [

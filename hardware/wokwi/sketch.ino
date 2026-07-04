@@ -7,10 +7,10 @@
  * the product demo; this sketch only demonstrates electrically sensible control.
  *
  * Submission wiring model:
- *   - ALL five loads are switched through relay modules.
- *   - Yellow LEDs stand in for lights.
- *   - Cyan LEDs stand in for fan mains/load indicators.
- *   - A potentiometer stands in for an ACS712 analog current sensor.
+ *   - ALL five AC loads are switched through relay modules.
+ *   - Yellow LEDs stand in for AC lights on the relay contact side.
+ *   - Cyan LEDs stand in for AC fan load indicators on the relay contact side.
+ *   - A potentiometer stands in for an optional ACS712 analog current sensor.
  *
  * To keep the schematic clean for grading, there are no manual wall switches in
  * the circuit. The controller auto-cycles through a fixed demo pattern instead.

@@ -88,14 +88,15 @@ The Vite dev server normally runs at `http://localhost:5173`.
 ## Hardware Schematic
 
 A Wokwi ESP32 schematic for one representative room (1 controller + 2 fans + 3 lights),
-showing an electrically sensible relay-driven control design for all five loads. It is a
-**concept/simulation only** and does not feed the running app — the live demo uses simulated data
-in the backend.
+showing an electrically sensible relay-driven control design for all five AC loads. The visible
+LEDs/motors in Wokwi are stand-ins for real mains appliances. It is a **concept/simulation only**
+and does not feed the running app — the live demo uses simulated data in the backend.
 
 ![Representative room schematic](hardware/schematic.png)
 
 See [`hardware/README.md`](hardware/README.md) for the pin map, wiring rationale, and how to
-open it in Wokwi.
+open it in Wokwi. The optional sensor shown there is a realism/bonus concept only; live office
+power totals for the dashboard and bot come from the backend's simulated device data.
 
 ## Team Ownership
 
