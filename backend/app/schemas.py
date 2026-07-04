@@ -4,11 +4,10 @@ from pydantic import BaseModel
 
 
 Room = Literal["drawing", "work1", "work2"]
-DeviceType = Literal["fan", "light", "controller"]
+DeviceType = Literal["fan", "light"]
 LoadStatus = Literal["on", "off"]
-ControllerStatus = Literal["online", "offline"]
-DeviceStatus = Literal["on", "off", "online", "offline"]
-AlertType = Literal["after_hours", "long_on", "controller_offline"]
+DeviceStatus = Literal["on", "off"]
+AlertType = Literal["after_hours", "long_on"]
 
 
 class Device(BaseModel):
@@ -36,7 +35,6 @@ class RoomResponse(BaseModel):
     devices: list[Device]
     power_w: int
     loads_on: int
-    controllers_online: int
     device_count: int
 
 
@@ -45,7 +43,6 @@ class RoomSummary(BaseModel):
     display_name: str
     power_w: int
     loads_on: int
-    controllers_online: int
     device_count: int
 
 
@@ -54,7 +51,6 @@ class Summary(BaseModel):
     per_room: dict[Room, RoomSummary]
     today_kwh: float
     load_count_on: int
-    controllers_online: int
     device_count: int
     server_time: str
 
@@ -84,7 +80,7 @@ class HistoryResponse(BaseModel):
 
 
 class DeviceStateRequest(BaseModel):
-    status: DeviceStatus
+    status: str
 
 
 class ClockRequest(BaseModel):

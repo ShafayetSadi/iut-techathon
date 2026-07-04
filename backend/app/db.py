@@ -1,8 +1,10 @@
 import sqlite3
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
+import random
 
-from .clock import iso_now
+from .clock import BUSINESS_TZ, iso_now, utc_now
 from .config import settings
 from .constants import DEVICE_LAYOUT, ROOMS
 
@@ -49,6 +51,7 @@ def init_db() -> None:
             )
             """
         )
+        _remove_legacy_controllers(conn)
         count = conn.execute("SELECT COUNT(*) FROM devices").fetchone()[0]
         if count == 0:
             seed_devices(conn)
@@ -58,7 +61,7 @@ def seed_devices(conn: sqlite3.Connection) -> None:
     now = iso_now()
     for room in ROOMS:
         for device_type, number, rated_w in DEVICE_LAYOUT:
-            status = "online" if device_type == "controller" else "off"
+            status = initial_device_status(device_type)
             conn.execute(
                 """
                 INSERT INTO devices (id, type, label, room, status, power_rated_w, last_changed)
@@ -74,6 +77,14 @@ def seed_devices(conn: sqlite3.Connection) -> None:
                     now,
                 ),
             )
+
+
+def initial_device_status(device_type: str) -> str:
+    return random.choice(["on", "off"])
+
+
+def _remove_legacy_controllers(conn: sqlite3.Connection) -> None:
+    conn.execute("DELETE FROM devices WHERE type = 'controller'")
 
 
 def row_to_device(row: sqlite3.Row) -> dict:
@@ -121,6 +132,39 @@ def append_state_event(total_power_w: int, loads_on: int) -> None:
             "INSERT INTO state_events (ts, total_power_w, loads_on) VALUES (?, ?, ?)",
             (iso_now(), total_power_w, loads_on),
         )
+
+
+def _parse_iso_utc(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def get_today_kwh() -> float:
+    now = utc_now()
+    local_midnight = now.astimezone(BUSINESS_TZ).replace(hour=0, minute=0, second=0, microsecond=0)
+    midnight_utc = local_midnight.astimezone(now.tzinfo)
+
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT ts, total_power_w
+            FROM state_events
+            WHERE ts >= ?
+            ORDER BY ts ASC
+            """,
+            (midnight_utc.isoformat().replace("+00:00", "Z"),),
+        ).fetchall()
+
+    if not rows:
+        return 0.0
+
+    watt_seconds = 0.0
+    for index, row in enumerate(rows):
+        start = _parse_iso_utc(row["ts"])
+        end = now if index == len(rows) - 1 else _parse_iso_utc(rows[index + 1]["ts"])
+        elapsed_seconds = max(0.0, (end - start).total_seconds())
+        watt_seconds += row["total_power_w"] * elapsed_seconds
+
+    return watt_seconds / 3_600_000
 
 
 def get_history(limit: int = 600) -> list[dict]:

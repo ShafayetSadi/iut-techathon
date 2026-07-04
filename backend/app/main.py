@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -48,6 +49,31 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     return JSONResponse(
         status_code=exc.status_code,
         content={"error": {"code": "http_error", "message": str(exc.detail), "details": {}}},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    errors = exc.errors()
+    first = errors[0] if errors else {}
+    error_type = first.get("type", "")
+    details: dict = dict(request.path_params)
+
+    if error_type == "json_invalid":
+        return JSONResponse(
+            status_code=400,
+            content={"error": {"code": "bad_request", "message": "Invalid JSON body.", "details": details}},
+        )
+
+    loc = [part for part in first.get("loc", ()) if isinstance(part, str) and part not in ("body", "query")]
+    field = loc[-1] if loc else None
+    if field is not None:
+        details[field] = first.get("input")
+
+    message = first.get("msg", "Invalid request.")
+    return JSONResponse(
+        status_code=422,
+        content={"error": {"code": "validation_error", "message": message, "details": details}},
     )
 
 

@@ -10,8 +10,6 @@ DEVICE_LAYOUT = (
     ("light", 1, 15),
     ("light", 2, 15),
     ("light", 3, 15),
-    ("controller", 1, 0),
 )
 
 LOAD_TYPES = {"fan", "light"}
-CONTROLLER_TYPE = "controller"

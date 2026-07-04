@@ -140,16 +140,15 @@ powers the trend chart and lets us survive restarts.
 | Column          | Type                | Notes                                 |
 | --------------- | ------------------- | ------------------------------------- |
 | `id`            | TEXT PK             | Deterministic, e.g. `work1-fan-1`     |
-| `type`          | TEXT                | `fan` \| `light` \| `controller`      |
+| `type`          | TEXT                | `fan` \| `light`                      |
 | `label`         | TEXT                | `Fan 1`, `Light 3`                    |
 | `room`          | TEXT                | `drawing` \| `work1` \| `work2`       |
-| `status`        | TEXT                | Fans/lights: `on` \| `off`; controllers: `online` \| `offline` |
-| `power_rated_w` | INT                 | Rated draw when ON (fan 60, light 15, controller 0) |
+| `status`        | TEXT                | `on` \| `off`                         |
+| `power_rated_w` | INT                 | Rated draw when ON (fan 60, light 15) |
 | `last_changed`  | TEXT (ISO 8601 UTC) | Updated only when `status` flips      |
 
-`power_w` in responses is **derived**: fans/lights use `power_rated_w if status=='on' else 0`;
-controllers always return `0`. We store the rated value, not the current one, so there's a single
-truth.
+`power_w` in responses is **derived**: fans/lights use `power_rated_w if status=='on' else 0`. We
+store the rated value, not the current one, so there's a single truth.
 
 ### `state_events` (history)
 
@@ -166,11 +165,11 @@ samples over the current day.
 
 ### Seed (runs once on empty DB)
 
-18 devices, generated deterministically:
+15 devices, generated deterministically:
 
 ```text
 rooms   = ["drawing", "work1", "work2"]
-per room: fan-1, fan-2 (60W each), light-1, light-2, light-3 (15W each), controller-1 (0W)
+per room: fan-1, fan-2 (60W each), light-1, light-2, light-3 (15W each)
 id      = f"{room}-{type}-{n}"      e.g. "drawing-light-2"
 label   = f"{Type} {n}"             e.g. "Light 2"
 ```
@@ -185,7 +184,7 @@ Layered, single-process. The tick loop is the heartbeat.
 
 ```text
 FastAPI lifespan (startup)
-   └─ init_db() → create tables, seed 18 devices if empty
+   └─ init_db() → create tables, seed 15 devices if empty
    └─ launch asyncio task: simulator_loop()
 
 simulator_loop()  ── every TICK_SECONDS (default 3s) ──▶
@@ -236,8 +235,8 @@ All timestamps are **ISO 8601 UTC**. All responses are JSON.
 
 | Method | Path                       | Returns                                                                     |
 | ------ | -------------------------- | --------------------------------------------------------------------------- |
-| GET    | `/api/devices`             | `{ "devices": [Device, …18] }`                                              |
-| GET    | `/api/rooms/{room}`        | `{ "room": "work1", "devices": [...], "power_w": 135, "loads_on": 3, "controllers_online": 1 }` |
+| GET    | `/api/devices`             | `{ "devices": [Device, …15] }`                                              |
+| GET    | `/api/rooms/{room}`        | `{ "room": "work1", "devices": [...], "power_w": 135, "loads_on": 3, "device_count": 5 }` |
 | GET    | `/api/summary`             | see below                                                                   |
 | GET    | `/api/history?minutes=30`  | `{ "points": [{ "ts": "...", "total_power_w": 375, "loads_on": 10 }, ...] }` |
 | GET    | `/api/alerts`              | `{ "alerts": [Alert, …] }`                                                  |
@@ -250,14 +249,13 @@ All timestamps are **ISO 8601 UTC**. All responses are JSON.
 {
   "total_power_w": 375,
   "per_room": {
-    "drawing": { "power_w": 75, "loads_on": 2, "controllers_online": 1 },
-    "work1": { "power_w": 135, "loads_on": 3, "controllers_online": 1 },
-    "work2": { "power_w": 165, "loads_on": 5, "controllers_online": 1 }
+    "drawing": { "power_w": 75, "loads_on": 2, "device_count": 5 },
+    "work1": { "power_w": 135, "loads_on": 3, "device_count": 5 },
+    "work2": { "power_w": 165, "loads_on": 5, "device_count": 5 }
   },
   "today_kwh": 4.2,
   "load_count_on": 10,
-  "controllers_online": 3,
-  "device_count": 18,
+  "device_count": 15,
   "server_time": "2026-07-03T14:22:10Z"
 }
 ```
@@ -267,7 +265,7 @@ All timestamps are **ISO 8601 UTC**. All responses are JSON.
 ```json
 {
   "id": "afterhours-work2-2026-07-03T22:00",
-  "type": "after_hours", // "after_hours" | "long_on" | "controller_offline"
+  "type": "after_hours", // "after_hours" | "long_on"
   "room": "work2",
   "message": "Work Room 2 has 2 fans and 3 lights ON at 10:00 PM.",
   "since": "2026-07-03T22:00:00Z",
@@ -313,8 +311,6 @@ Runs every tick in `alerts.py`, using `clock.now()` (so the demo override works)
 2. **Long-on room** (`long_on`) — if **all 5 fans/lights** in a room have been continuously ON for
    **> 2 hours**, emit an alert for that room. "Continuously" is tracked from the _oldest_
    `last_changed` among the room's fans/lights while all are ON.
-3. **Controller offline** (`controller_offline`) — if a room controller is offline, emit an alert
-   for that room.
 
 ### Lifecycle & dedup
 
@@ -335,7 +331,7 @@ App
 ├── <Header/>                    # office name + live/disconnected indicator + clock
 ├── <PowerMeter/>                # big total watts + per-room bars (from summary)
 ├── <PowerTrendChart/>           # Recharts line from GET /api/history, appends WS samples
-├── <DeviceStatusPanel/>         # 18 devices grouped by room, on/off pill each
+├── <DeviceStatusPanel/>         # 15 devices grouped by room, on/off pill each
 ├── <AlertsPanel/>               # alerts list, timestamped, color-coded by type
 └── <OfficeLayout/>              # SVG top-view; lights glow, fans spin when ON  (BONUS)
 ```
@@ -497,7 +493,7 @@ tick loop flips work1-light-2 OFF → writes DB (last_changed updated)
 - **No real hardware.** Device data is simulated; the Wokwi schematic is a concept proof only.
 - **No authentication.** Single-tenant internal tool; anyone with the URL can view. (Out of scope
   for the prelim.)
-- **Fixed office.** Exactly 3 rooms × (2 fans + 3 lights + 1 controller) = 18 devices; layout matches the PDF and
+- **Fixed office.** Exactly 3 rooms × (2 fans + 3 lights) = 15 devices; layout matches the PDF and
   is not user-editable.
 - **Power figures are nominal** (fan 60W, light 15W) — realistic, not metered.
 - **`today_kwh`** is an estimate integrated from tick samples, reset at local midnight.

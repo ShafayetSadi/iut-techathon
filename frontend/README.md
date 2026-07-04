@@ -17,11 +17,17 @@ snapshot as the primary data source and REST polling only as a fallback.
 npm install
 ```
 
-Create a local env file if the backend URL differs from the default:
+Create a local env file if the backend URL differs from the default (a
+ready-to-copy `.env.example` is included):
 
 ```bash
-printf 'VITE_API_BASE=http://localhost:8000\nVITE_WS_URL=ws://localhost:8000/ws\n' > .env.local
+cp .env.example .env.local
 ```
+
+| Variable            | Default                    | Notes                                             |
+| ------------------- | -------------------------- | ------------------------------------------------- |
+| `VITE_API_BASE_URL` | `http://localhost:8000`    | REST base URL. `VITE_API_BASE` is also accepted.  |
+| `VITE_WS_URL`       | `ws://localhost:8000/ws`   | Live snapshot stream. Use `wss://` in production. |
 
 ## Run
 
@@ -44,30 +50,51 @@ Build against `../docs/api-contract.md`.
 
 Important live data shapes:
 
-- `GET /api/devices` returns 18 devices.
+- `GET /api/devices` returns 15 devices.
 - `GET /api/summary` returns total power, per-room summaries, `load_count_on`, and
-  `controllers_online`.
+  `device_count`.
 - `GET /api/alerts` returns backend-computed alerts.
 - `WS /ws` sends one `snapshot` message with `devices`, `summary`, and `alerts`.
 
 Device rules:
 
-- Each room has 2 fans, 3 lights, and 1 controller.
+- Each room has 2 fans and 3 lights.
 - Fans/lights use `on` and `off`.
-- Controllers use `online` and `offline`.
-- Controllers do not count toward power usage.
 
 ## Dashboard Responsibilities
 
 - Connect to `VITE_WS_URL` and render the latest snapshot.
-- Show all 18 devices grouped by room.
+- Show all 15 devices grouped by room.
 - Show live total power and per-room power.
 - Show active alerts from the backend.
-- Visually distinguish fan/light state from controller online/offline state.
 - Reconnect to WebSocket with backoff; poll REST endpoints if WebSocket is unavailable.
 
 Do not recompute alert rules or power totals in React. Display the backend values so the dashboard
 and Discord bot stay consistent.
+
+## Architecture
+
+The dashboard keeps a single live `Snapshot` in state and renders every panel from it, so the whole
+page is always internally consistent — mirroring the backend's "one source of truth" rule.
+
+```text
+src/
+  components/dashboard/   # Header, SummaryCards, OfficeLayout, RoomDevicePanel,
+                          # DeviceIndicator, PowerConsumption, AlertsPanel,
+                          # ConnectionBanner, EmptyState, DashboardPage
+  hooks/
+    useDashboardSocket.ts   # primary WebSocket client + exponential-backoff reconnect
+    useDashboardFallback.ts # REST polling used only while the socket is down
+  lib/
+    api.ts      # env-driven URLs + typed REST client
+    format.ts   # formatWatts / formatKwh / formatTimestamp + safe summary fallback
+    room.ts     # room key → display name (the only hardcoded business data)
+  types/
+    dashboard.ts  # typed mirror of docs/api-contract.md
+```
+
+Connection states surfaced to the user: **Connecting → Live → Reconnecting (fallback) → Offline**.
+Last known data stays on screen during reconnects.
 
 ## Project Scripts
 

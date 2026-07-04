@@ -1,0 +1,259 @@
+{
+  "version": 1,
+  "author": "Techathon - Lights, Fans, Discord",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": 70,
+      "left": 270,
+      "attrs": { "label": "ESP32 Controller-1 / Work Room 1" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay_l1",
+      "top": -150,
+      "left": 540,
+      "attrs": { "label": "AC Light 1 Relay" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay_l2",
+      "top": -30,
+      "left": 540,
+      "attrs": { "label": "AC Light 2 Relay" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay_l3",
+      "top": 90,
+      "left": 540,
+      "attrs": { "label": "AC Light 3 Relay" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay_f1",
+      "top": 210,
+      "left": 540,
+      "attrs": { "label": "AC Fan 1 Relay" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay_f2",
+      "top": 330,
+      "left": 540,
+      "attrs": { "label": "AC Fan 2 Relay" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_l1",
+      "top": -140,
+      "left": 810,
+      "attrs": { "value": "220", "label": "Light 1 Resistor" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_l2",
+      "top": -20,
+      "left": 810,
+      "attrs": { "value": "220", "label": "Light 2 Resistor" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_l3",
+      "top": 100,
+      "left": 810,
+      "attrs": { "value": "220", "label": "Light 3 Resistor" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_f1",
+      "top": 220,
+      "left": 810,
+      "attrs": { "value": "220", "label": "Fan 1 Resistor" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_f2",
+      "top": 340,
+      "left": 810,
+      "attrs": { "value": "220", "label": "Fan 2 Resistor" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "light1",
+      "top": -112,
+      "left": 910,
+      "attrs": { "color": "yellow", "label": "AC Light 1 (LED stand-in)" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "light2",
+      "top": 8,
+      "left": 910,
+      "attrs": { "color": "yellow", "label": "AC Light 2 (LED stand-in)" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "light3",
+      "top": 128,
+      "left": 910,
+      "attrs": { "color": "yellow", "label": "AC Light 3 (LED stand-in)" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "fan1",
+      "top": 248,
+      "left": 910,
+      "attrs": { "color": "cyan", "label": "AC Fan 1 (LED stand-in)" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "fan2",
+      "top": 368,
+      "left": 910,
+      "attrs": { "color": "cyan", "label": "AC Fan 2 (LED stand-in)" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot",
+      "top": 470,
+      "left": 240,
+      "attrs": { "label": "Current Sensor / ACS712 stand-in (optional)" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_ctrl",
+      "top": -210,
+      "left": 250,
+      "attrs": { "text": "ESP32 Controller-1 / Work Room 1" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_rl1",
+      "top": -185,
+      "left": 540,
+      "attrs": { "text": "AC Light 1 Relay" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_ll1",
+      "top": -165,
+      "left": 930,
+      "attrs": { "text": "AC Light 1 (LED stand-in)" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_rl2",
+      "top": -65,
+      "left": 540,
+      "attrs": { "text": "AC Light 2 Relay" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_ll2",
+      "top": -45,
+      "left": 930,
+      "attrs": { "text": "AC Light 2 (LED stand-in)" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_rl3",
+      "top": 55,
+      "left": 540,
+      "attrs": { "text": "AC Light 3 Relay" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_ll3",
+      "top": 75,
+      "left": 930,
+      "attrs": { "text": "AC Light 3 (LED stand-in)" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_rf1",
+      "top": 175,
+      "left": 540,
+      "attrs": { "text": "AC Fan 1 Relay" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_lf1",
+      "top": 195,
+      "left": 930,
+      "attrs": { "text": "AC Fan 1 (LED stand-in)" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_rf2",
+      "top": 295,
+      "left": 540,
+      "attrs": { "text": "AC Fan 2 Relay" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_lf2",
+      "top": 315,
+      "left": 930,
+      "attrs": { "text": "AC Fan 2 (LED stand-in)" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "label_sensor",
+      "top": 440,
+      "left": 180,
+      "attrs": { "text": "Current Sensor / ACS712 stand-in (optional)" }
+    }
+  ],
+  "connections": [
+    ["esp:D4", "relay_l1:IN", "blue", []],
+    ["esp:D5", "relay_l2:IN", "blue", []],
+    ["esp:D18", "relay_l3:IN", "blue", []],
+    ["esp:D19", "relay_f1:IN", "blue", []],
+    ["esp:D21", "relay_f2:IN", "blue", []],
+
+    ["relay_l1:VCC", "esp:VIN", "red", []],
+    ["relay_l2:VCC", "esp:VIN", "red", []],
+    ["relay_l3:VCC", "esp:VIN", "red", []],
+    ["relay_f1:VCC", "esp:VIN", "red", []],
+    ["relay_f2:VCC", "esp:VIN", "red", []],
+
+    ["relay_l1:GND", "esp:GND.2", "black", []],
+    ["relay_l2:GND", "esp:GND.2", "black", []],
+    ["relay_l3:GND", "esp:GND.2", "black", []],
+    ["relay_f1:GND", "esp:GND.2", "black", []],
+    ["relay_f2:GND", "esp:GND.2", "black", []],
+
+    ["relay_l1:COM", "esp:3V3", "red", []],
+    ["relay_l1:NO", "r_l1:1", "orange", []],
+    ["r_l1:2", "light1:A", "orange", []],
+    ["light1:C", "esp:GND.2", "black", []],
+
+    ["relay_l2:COM", "esp:3V3", "red", []],
+    ["relay_l2:NO", "r_l2:1", "orange", []],
+    ["r_l2:2", "light2:A", "orange", []],
+    ["light2:C", "esp:GND.2", "black", []],
+
+    ["relay_l3:COM", "esp:3V3", "red", []],
+    ["relay_l3:NO", "r_l3:1", "orange", []],
+    ["r_l3:2", "light3:A", "orange", []],
+    ["light3:C", "esp:GND.2", "black", []],
+
+    ["relay_f1:COM", "esp:3V3", "red", []],
+    ["relay_f1:NO", "r_f1:1", "cyan", []],
+    ["r_f1:2", "fan1:A", "cyan", []],
+    ["fan1:C", "esp:GND.2", "black", []],
+
+    ["relay_f2:COM", "esp:3V3", "red", []],
+    ["relay_f2:NO", "r_f2:1", "cyan", []],
+    ["r_f2:2", "fan2:A", "cyan", []],
+    ["fan2:C", "esp:GND.2", "black", []],
+
+    ["pot:VCC", "esp:3V3", "red", []],
+    ["pot:GND", "esp:GND.2", "black", []],
+    ["pot:SIG", "esp:VP", "gray", []]
+  ],
+  "dependencies": {}
+}

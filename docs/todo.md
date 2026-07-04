@@ -8,18 +8,17 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 - [ ] Build every component against `docs/api-contract.md`.
 - [ ] Keep the backend as the only writer of device state.
 - [ ] Keep SQLite as the backend source of truth.
-- [ ] Use the fixed device model: 3 rooms, each with 2 fans, 3 lights, and 1 controller.
+- [ ] Use the fixed device model: 3 rooms, each with 2 fans and 3 lights.
 - [ ] Use `on` / `off` only for fans and lights.
-- [ ] Use `online` / `offline` only for controllers.
 - [ ] Keep power math and alert logic in the backend only.
 - [ ] Make the dashboard and Discord bot display backend values instead of recomputing them.
-- [ ] Use `load_count_on`, `loads_on`, and `controllers_online` from the contract; do not use stale `device_count_on` / `devices_on` fields.
+- [ ] Use `load_count_on`, `loads_on`, and `device_count` from the contract; do not use stale `device_count_on` / `devices_on` fields.
 - [ ] Keep commits small and scoped to each person’s component.
 
 ## Day 0 Coordination
 
 - [ ] Everyone reads `docs/api-contract.md`.
-- [ ] Everyone confirms the device model: 18 devices total, 6 fans, 9 lights, 3 controllers.
+- [ ] Everyone confirms the device model: 15 devices total, 6 fans, 9 lights.
 - [ ] Saima confirms which backend endpoints are already available and which are still scaffold-only.
 - [ ] Arif confirms frontend env values: `VITE_API_BASE=http://localhost:8000` and `VITE_WS_URL=ws://localhost:8000/ws`.
 - [ ] Jifat confirms bot env values needed: `DISCORD_TOKEN`, `ALERT_CHANNEL_ID`, `API_BASE`, `ANTHROPIC_API_KEY`.
@@ -30,12 +29,10 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 ### Contract and Data Model
 
 - [ ] Keep `backend/app/schemas.py` aligned with `docs/api-contract.md`.
-- [ ] Ensure SQLite seeds exactly 18 devices.
-- [ ] Ensure each room seeds `fan-1`, `fan-2`, `light-1`, `light-2`, `light-3`, `controller-1`.
+- [ ] Ensure SQLite seeds exactly 15 devices.
+- [ ] Ensure each room seeds `fan-1`, `fan-2`, `light-1`, `light-2`, `light-3`.
 - [ ] Ensure fans have `power_rated_w = 60`.
 - [ ] Ensure lights have `power_rated_w = 15`.
-- [ ] Ensure controllers have `power_rated_w = 0`.
-- [ ] Ensure controllers always return `power_w = 0`.
 - [ ] Ensure invalid rooms and device IDs return the documented error envelope.
 
 ### REST API
@@ -57,10 +54,9 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 
 - [ ] Implement realistic fan/light state changes on the background tick.
 - [ ] Avoid flipping all devices at once.
-- [ ] Keep controller online/offline changes rare and demo-friendly.
 - [ ] Append `state_events` rows on each simulator tick.
 - [ ] Compute `total_power_w` from fans and lights only.
-- [ ] Compute per-room `power_w`, `loads_on`, and `controllers_online`.
+- [ ] Compute per-room `power_w`, `loads_on`, and `device_count`.
 - [ ] Implement `today_kwh` from tick samples since local midnight in `Asia/Dhaka`.
 - [ ] Ensure manual device changes trigger a fresh WebSocket snapshot.
 - [ ] Ensure simulator pause stops random changes but manual controls and reads still work.
@@ -69,7 +65,6 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 
 - [ ] Implement `after_hours` for any fan/light on outside 09:00-17:00 in `Asia/Dhaka`.
 - [ ] Implement `long_on` for all five fans/lights in a room continuously on for more than 2 hours.
-- [ ] Implement `controller_offline` when a room controller is offline.
 - [ ] Make alert IDs stable enough for bot deduplication.
 - [ ] Remove alerts from `GET /api/alerts` as soon as their condition clears.
 - [ ] Include alerts in every WebSocket snapshot.
@@ -77,9 +72,9 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 ### Backend Validation
 
 - [ ] Run `python3 -m compileall .` inside `backend`.
-- [ ] Run a smoke check that `GET /api/devices` returns 18 devices.
-- [ ] Verify type counts: 6 fans, 9 lights, 3 controllers.
-- [ ] Verify every room returns exactly 6 devices.
+- [ ] Run a smoke check that `GET /api/devices` returns 15 devices.
+- [ ] Verify type counts: 6 fans, 9 lights.
+- [ ] Verify every room returns exactly 5 devices.
 - [ ] Verify `/api/summary.total_power_w` equals the sum of fan/light `power_w`.
 - [ ] Verify demo clock can force an after-hours alert.
 - [ ] Verify `POST /api/demo/simulator` pauses and resumes simulator changes.
@@ -99,21 +94,19 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 ### Required Dashboard Panels
 
 - [ ] Build the live device status panel grouped by Drawing Room, Work Room 1, and Work Room 2.
-- [ ] Show all 18 devices.
+- [ ] Show all 15 devices.
 - [ ] Display fans and lights as `on` / `off`.
-- [ ] Display controllers as `online` / `offline`.
 - [ ] Build the live power meter from `summary.total_power_w`.
-- [ ] Show per-room `power_w`, `loads_on`, and `controllers_online`.
+- [ ] Show per-room `power_w`, `loads_on`, and `device_count`.
 - [ ] Build the active alerts panel from backend alerts.
 - [ ] Show alert type, room, message, and timestamp.
 
 ### Office Layout and UX
 
 - [ ] Build the top-view office layout after the required panels work.
-- [ ] Map each fan/light/controller to its backend device ID.
+- [ ] Map each fan/light to its backend device ID.
 - [ ] Animate fans when `status === "on"`.
 - [ ] Make lights glow when `status === "on"`.
-- [ ] Show controller connection state clearly.
 - [ ] Keep the dashboard usable on laptop and mobile widths.
 - [ ] Avoid computing alert or power truth in React.
 
@@ -153,7 +146,6 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 - [ ] Implement aliases for user-friendly room names if time allows, such as `work room 1`.
 - [ ] Implement `!usage` using `GET /api/summary`.
 - [ ] Ensure replies use real backend JSON values only.
-- [ ] Mention controller state when useful, especially if a controller is offline.
 - [ ] Keep a plain template fallback for every command.
 
 ### LLM Humanization
@@ -170,7 +162,7 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 - [ ] Deduplicate by `alert.id`.
 - [ ] Post new alerts to `ALERT_CHANNEL_ID`.
 - [ ] Include room, alert message, and timestamp in proactive posts.
-- [ ] Confirm `after_hours`, `long_on`, and `controller_offline` alerts all produce useful messages.
+- [ ] Confirm `after_hours` and `long_on` alerts both produce useful messages.
 
 ### Bot Validation
 
@@ -193,7 +185,7 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 ### System Diagram
 
 - [ ] Create a non-Mermaid system diagram in Excalidraw, draw.io, Figma, or similar.
-- [ ] Show room devices/controllers feeding simulated backend data.
+- [ ] Show room devices feeding simulated backend data.
 - [ ] Show FastAPI + SQLite as the source of truth.
 - [ ] Show WebSocket path to the React dashboard.
 - [ ] Show REST path to the Discord bot.
@@ -202,15 +194,15 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 
 ### Hardware Schematic
 
-- [ ] Create one representative-room schematic in Wokwi or Tinkercad.
-- [ ] Include one ESP32/Arduino controller.
-- [ ] Include 2 fan stand-ins.
-- [ ] Include 3 light stand-ins.
-- [ ] Use buttons/switches as device state inputs.
-- [ ] Use LEDs/relay modules as output stand-ins where appropriate.
-- [ ] Add optional current-sense concept if time permits.
-- [ ] Document pin mapping and connection reasoning.
-- [ ] Export screenshot/share link into `docs/` or `hardware/`.
+- [x] Create one representative-room schematic in Wokwi or Tinkercad.
+- [x] Include one ESP32/Arduino controller.
+- [x] Include 2 fan stand-ins.
+- [x] Include 3 light stand-ins.
+- [x] Use buttons/switches as device state inputs.
+- [x] Use LEDs/relay modules as output stand-ins where appropriate.
+- [x] Add optional current-sense concept if time permits.
+- [x] Document pin mapping and connection reasoning.
+- [x] Export screenshot/share link into `docs/` or `hardware/`.
 
 ### Integration
 
@@ -221,7 +213,6 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 - [ ] Toggle a device and confirm both dashboard and bot reflect it.
 - [ ] Force 10 PM with demo clock and confirm alert appears in dashboard.
 - [ ] Confirm bot posts the same alert proactively.
-- [ ] Confirm controller offline alert is visible in dashboard and bot.
 
 ### Demo Video
 
@@ -231,7 +222,7 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 - [ ] Show `!room work2`.
 - [ ] Show `!usage`.
 - [ ] Show after-hours alert firing.
-- [ ] Explain the architecture: simulated devices/controllers -> SQLite backend -> dashboard and bot.
+- [ ] Explain the architecture: simulated room devices -> SQLite backend -> dashboard and bot.
 - [ ] Mention single source of truth explicitly.
 - [ ] Record final video after one full dry run.
 
@@ -255,13 +246,13 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 - [ ] Fresh clone can run backend from README steps.
 - [ ] Fresh clone can run frontend from README steps.
 - [ ] Bot setup is documented once `/bot` exists.
-- [ ] `GET /api/devices` returns 18 devices.
-- [ ] Dashboard shows all 18 devices.
+- [ ] `GET /api/devices` returns 15 devices.
+- [ ] Dashboard shows all 15 devices.
 - [ ] Dashboard updates without manual refresh.
 - [ ] Bot answers from real backend data.
 - [ ] Bot and dashboard never disagree when checked at the same moment.
 - [ ] Alerts are timestamped.
 - [ ] Demo controls can reliably trigger an alert.
 - [ ] System diagram is included in the repo.
-- [ ] Circuit schematic is included in the repo.
+- [x] Circuit schematic is included in the repo.
 - [ ] Final demo video is 3 minutes or less.
