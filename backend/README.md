@@ -22,6 +22,9 @@ Optional local environment file:
 cp .env.example .env
 ```
 
+The Discord bot is optional. Leave `DISCORD_TOKEN` empty to run only the API and simulator. Fill it
+in to start the bot from the same FastAPI process.
+
 ## Run
 
 ```bash
@@ -36,8 +39,34 @@ Useful URLs:
 - `GET /api/devices`
 - `GET /api/summary`
 - `GET /api/alerts`
+- `POST /api/chat`
 - `WS /ws`
 - Swagger UI at `http://localhost:8000/docs`
+
+## Discord Bot
+
+The bot lives in `app/discord.py` and is started from `app/main.py` during FastAPI lifespan. It does
+not keep its own device state. Each command posts a question to `POST /api/chat`; that route builds
+the current backend snapshot (`devices`, `summary`, `alerts`) and sends it through `app/llm.py` for
+OpenRouter humanization or a deterministic template fallback.
+
+Commands:
+
+- `!status` - status of all rooms.
+- `!room <name>` - one room; accepts aliases such as `drawing room`, `work1`, `work room 2`, `w2`.
+- `!usage` - current total power and today's estimated kWh.
+- `!ask <question>` - free-form office question, still answered only from live backend data.
+
+Environment:
+
+- `DISCORD_TOKEN` enables the bot.
+- `BOT_COMMAND_PREFIX` defaults to `!`.
+- `API_BASE` defaults to `http://localhost:8000`.
+- `ALERT_CHANNEL_ID` enables proactive alert posts.
+- `ALERT_POLL_SECONDS` defaults to `15`.
+- `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, and `OPENROUTER_BASE_URL` configure optional LLM
+  humanization. If the key is absent or the model call fails, replies still use real backend data
+  via the template fallback.
 
 ## Device Model
 
@@ -60,6 +89,8 @@ backend/
 │   ├── schemas.py       Pydantic request/response models
 │   ├── power.py         Room and office power summaries
 │   ├── alerts.py        after_hours and long_on alerts
+│   ├── discord.py       in-process discord.py bot and proactive alert poller
+│   ├── llm.py           OpenRouter humanization with template fallback
 │   ├── simulator.py     Background tick loop scaffold
 │   ├── snapshot.py      Contract-shaped WebSocket snapshot builder
 │   ├── ws.py            WebSocket connection manager

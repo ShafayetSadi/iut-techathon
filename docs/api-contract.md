@@ -952,12 +952,14 @@ Jifat and Arif can use these payloads before Saima's backend is ready.
 
 ### Jifat
 
-- Build `backend_client.py` against this contract.
-- Use REST only; do not read SQLite directly.
+- Use the backend API/snapshot path only; do not read SQLite directly.
 - Implement command data needs as:
-  - `!status`: `GET /api/devices` plus `GET /api/summary`.
-  - `!room <name>`: `GET /api/rooms/{room}`.
-  - `!usage`: `GET /api/summary`.
+  - `!status`: ask `POST /api/chat`, which injects the current snapshot (`devices`, `summary`,
+    `alerts`) before humanizing the response.
+  - `!room <name>`: normalize the room alias in the bot, then ask `POST /api/chat` for that room
+    from the current snapshot.
+  - `!usage`: ask `POST /api/chat`; the route reads live `summary.total_power_w` and
+    `summary.today_kwh` from the snapshot.
   - proactive alerts: poll `GET /api/alerts` every 15 seconds and deduplicate by `alert.id`.
 - If the LLM fails, return a simple templated message using the same backend JSON.
 

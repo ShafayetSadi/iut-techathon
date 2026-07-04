@@ -29,18 +29,16 @@ disagree.
 
 ```text
 iut-techathon/
-├── backend/       FastAPI + SQLite API
+├── backend/       FastAPI + SQLite API + in-process Discord bot
 ├── frontend/      React + Vite dashboard
 ├── hardware/      Wokwi ESP32 schematic (concept for one room)
 ├── docs/          Team plan, architecture, fixed API contract, problem statement
 └── README.md
 ```
 
-Planned folders:
-
-```text
-bot/               Discord bot using REST API
-```
+The Discord bot now lives inside the backend process at `backend/app/discord.py`. It starts from
+FastAPI lifespan when `DISCORD_TOKEN` is configured, and is disabled automatically when the token is
+empty so local backend work can still run without Discord credentials.
 
 ## Fixed Contract
 
@@ -63,10 +61,27 @@ Backend:
 ```bash
 cd backend
 uv sync
+cp .env.example .env
 uv run python main.py
 ```
 
 The API runs at `http://localhost:8000`.
+
+To enable the Discord bot, fill these values in `backend/.env` before starting the backend:
+
+- `DISCORD_TOKEN`: Discord bot token.
+- `ALERT_CHANNEL_ID`: optional channel ID for proactive alert posts.
+- `API_BASE`: backend URL the bot calls, normally `http://localhost:8000` locally.
+- `OPENROUTER_API_KEY`: optional LLM key for humanized replies. Without it, commands still answer
+  from a deterministic template built from the same backend snapshot.
+- `OPENROUTER_MODEL`: optional OpenRouter model override.
+
+The bot uses prefix commands by default:
+
+- `!status`: all-room fan/light status.
+- `!room <name>`: one room, such as `!room work1` or `!room drawing room`.
+- `!usage`: current total watts and today's estimated kWh.
+- `!ask <question>`: free-form office question answered from the live backend snapshot.
 
 Frontend:
 
@@ -104,7 +119,7 @@ power totals for the dashboard and bot come from the backend's simulated device 
 
 - Saima: backend simulator, SQLite state, REST API, WebSocket snapshots, alerts.
 - Arif: React dashboard, live panels, power meter, alerts panel, office layout.
-- Jifat: Discord bot, REST client, commands, LLM humanization, proactive alert posts.
+- Jifat: in-process Discord bot, command handlers, LLM humanization, proactive alert posts.
 - Sadi: API contract, diagrams, circuit schematic, README, integration, demo video.
 
 ## Validation Checklist
@@ -113,5 +128,6 @@ power totals for the dashboard and bot come from the backend's simulated device 
 - Each room has exactly 2 fans and 3 lights.
 - `GET /api/summary.total_power_w` equals the sum of fan/light `power_w`.
 - Dashboard updates from `WS /ws` without refresh.
-- Bot commands read REST data from the same backend.
+- Bot commands call `POST /api/chat`, which injects the same live backend snapshot used by the
+  dashboard before humanizing the reply.
 - Demo clock override can trigger an after-hours alert visible in both dashboard and bot.
