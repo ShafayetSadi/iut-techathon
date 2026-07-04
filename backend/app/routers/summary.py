@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from ..clock import iso_now
 from ..db import get_devices, get_history, get_today_kwh
+from ..errors import validation_error
 from ..power import build_summary
 from ..schemas import HistoryResponse, Summary
 
@@ -16,5 +17,6 @@ def read_summary() -> dict:
 
 @router.get("/history", response_model=HistoryResponse)
 def read_history(minutes: int = 30) -> dict:
-    minutes = max(1, min(minutes, 180))
+    if minutes < 1 or minutes > 180:
+        raise validation_error("minutes must be between 1 and 180.", minutes=minutes)
     return {"minutes": minutes, "points": get_history(limit=minutes * 20)}

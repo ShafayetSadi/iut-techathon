@@ -6,9 +6,9 @@ real-time web dashboard, and a Discord bot.
 The fixed office model is:
 
 - 3 rooms: Drawing Room, Work Room 1, Work Room 2.
-- Each room has 2 fans, 3 lights, and 1 controller.
-- Total monitored devices: 18.
-- Fans use 60W when on, lights use 15W when on, controllers report 0W and use `online`/`offline`.
+- Each room has 2 fans and 3 lights.
+- Total monitored devices: 15.
+- Fans use 60W when on, lights use 15W when on.
 
 ## Architecture
 
@@ -47,7 +47,7 @@ The team must build against [docs/api-contract.md](docs/api-contract.md). That f
 - REST endpoint paths and response wrappers.
 - WebSocket `snapshot` shape.
 - Device IDs and enum values.
-- Alert types: `after_hours`, `long_on`, `controller_offline`.
+- Alert types: `after_hours`, `long_on`.
 - Demo controls for clock override, simulator pause/resume, and manual device state changes.
 - Canonical mock JSON fixtures for parallel frontend/bot work.
 
@@ -87,7 +87,7 @@ The Vite dev server normally runs at `http://localhost:5173`.
 
 ## Hardware Schematic
 
-A Wokwi ESP32 schematic for one representative room (1 controller + 2 fans + 3 lights),
+A Wokwi ESP32 schematic for one representative room,
 proving how the devices would be sensed and switched in real life. It is a **concept/simulation
 only** and does not feed the running app — the live demo uses simulated data in the backend.
 
@@ -105,8 +105,8 @@ open it in Wokwi.
 
 ## Validation Checklist
 
-- `GET /api/devices` returns exactly 18 devices: 6 fans, 9 lights, 3 controllers.
-- Each room has exactly 2 fans, 3 lights, and 1 controller.
+- `GET /api/devices` returns exactly 15 devices: 6 fans and 9 lights.
+- Each room has exactly 2 fans and 3 lights.
 - `GET /api/summary.total_power_w` equals the sum of fan/light `power_w`.
 - Dashboard updates from `WS /ws` without refresh.
 - Bot commands read REST data from the same backend.

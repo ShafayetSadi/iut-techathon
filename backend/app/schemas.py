@@ -80,7 +80,7 @@ class HistoryResponse(BaseModel):
 
 
 class DeviceStateRequest(BaseModel):
-    status: DeviceStatus
+    status: str
 
 
 class ClockRequest(BaseModel):

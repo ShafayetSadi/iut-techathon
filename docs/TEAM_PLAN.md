@@ -2,8 +2,8 @@
 
 ## Context
 
-We're building the boss's office-monitoring system: 18 simulated devices (2 fans + 3 lights + 1
-controller × 3 rooms) whose live state flows through **one shared backend** to both a **real-time web
+We're building the boss's office-monitoring system: 15 simulated devices (2 fans + 3 lights × 3
+rooms) whose live state flows through **one shared backend** to both a **real-time web
 dashboard** and an **LLM-powered Discord bot**. No real hardware — data is simulated but must be
 dynamic (change over time). Deliverables also include a system diagram, a Wokwi/Tinkercad circuit
 schematic, a public repo with README, and a ≤3-min demo video.
@@ -48,25 +48,25 @@ video) in addition to being the glue.
 Nothing parallelizes until the contract is agreed. Sadi + Saima draft it; whole team signs off.
 This lives in `README.md` / `docs/api-contract.md` so Arif and Jifat build against a stable shape.
 
-**Device model (18 of these):**
+**Device model (15 of these):**
 
 ```json
 {
   "id": "work1-fan-1",
-  "type": "fan", // "fan" | "light" | "controller"
+  "type": "fan", // "fan" | "light"
   "label": "Fan 1",
   "room": "work1", // "drawing" | "work1" | "work2"
-  "status": "on", // fans/lights: "on" | "off"; controllers: "online" | "offline"
-  "power_w": 60, // fan/light watts when on; controllers report 0
+  "status": "on", // "on" | "off"
+  "power_w": 60, // fan/light watts when on
   "last_changed": "2026-07-03T14:22:10Z"
 }
 ```
 
 **Endpoints (REST):**
 
-- `GET /api/devices` → all 18 devices
+- `GET /api/devices` → all 15 devices
 - `GET /api/rooms/{room}` → devices + totals for one room
-- `GET /api/summary` → `{ total_power_w, per_room: {...}, today_kwh, load_count_on, controllers_online }`
+- `GET /api/summary` → `{ total_power_w, per_room: {...}, today_kwh, load_count_on, device_count }`
 - `GET /api/alerts` → active alerts `[{ id, type, message, room, timestamp }]`
 - (optional) `POST /api/devices/{id}/toggle` → lets the demo/video force interesting states
 
@@ -77,7 +77,6 @@ simulator tick (e.g. every 2–3s) so the dashboard updates with **no page refre
 
 - **After-hours:** any fan/light on outside 9 AM–5 PM.
 - **Long-on room:** all 5 fans/lights in a room continuously on > 2 hours.
-- **Controller offline:** a room controller is offline.
 - Every alert is timestamped.
 
 ---
@@ -86,8 +85,8 @@ simulator tick (e.g. every 2–3s) so the dashboard updates with **no page refre
 
 ### Saima — Backend (`/backend`, FastAPI)
 
-1. **Simulator engine** — SQLite-backed store of 18 devices; a background task that flips random
-   device states on an interval and updates `last_changed`. Keep it plausible (don't flip all 18
+1. **Simulator engine** — SQLite-backed store of 15 devices; a background task that flips random
+   device states on an interval and updates `last_changed`. Keep it plausible (don't flip all 15
    every tick). Track a running `today_kwh` accumulator (power × elapsed time).
 2. **REST endpoints** above, reading from the single SQLite source of truth.
 3. **WebSocket broadcaster** — on each tick, push the snapshot to all connected clients.
@@ -102,7 +101,7 @@ _Deliver a stub of `/api/devices` + `/ws` within the first day so Arif and Jifat
 
 1. **WebSocket client** — connect to `/ws`, keep a single live snapshot in state; fall back to
    polling `/api/summary` if WS drops.
-2. **Live Device Status Panel** — 18 devices grouped by room, each labeled ("Fan 1", "Light 3")
+2. **Live Device Status Panel** — 15 devices grouped by room, each labeled ("Fan 1", "Light 3")
    with a clear on/off indicator. Updates in real time.
 3. **Live Power Consumption Meter** — total watts + per-room breakdown, updating live.
 4. **Active Alerts Panel** — render `/alerts` items, timestamped, visually prominent.

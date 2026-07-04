@@ -44,26 +44,23 @@ Build against `../docs/api-contract.md`.
 
 Important live data shapes:
 
-- `GET /api/devices` returns 18 devices.
+- `GET /api/devices` returns 15 devices.
 - `GET /api/summary` returns total power, per-room summaries, `load_count_on`, and
-  `controllers_online`.
+  `device_count`.
 - `GET /api/alerts` returns backend-computed alerts.
 - `WS /ws` sends one `snapshot` message with `devices`, `summary`, and `alerts`.
 
 Device rules:
 
-- Each room has 2 fans, 3 lights, and 1 controller.
+- Each room has 2 fans and 3 lights.
 - Fans/lights use `on` and `off`.
-- Controllers use `online` and `offline`.
-- Controllers do not count toward power usage.
 
 ## Dashboard Responsibilities
 
 - Connect to `VITE_WS_URL` and render the latest snapshot.
-- Show all 18 devices grouped by room.
+- Show all 15 devices grouped by room.
 - Show live total power and per-room power.
 - Show active alerts from the backend.
-- Visually distinguish fan/light state from controller online/offline state.
 - Reconnect to WebSocket with backoff; poll REST endpoints if WebSocket is unavailable.
 
 Do not recompute alert rules or power totals in React. Display the backend values so the dashboard

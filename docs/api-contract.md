@@ -36,7 +36,6 @@ The dashboard and bot are readers.
 | --- | ---: | --- | --- |
 | `fan` | `60` watts | `on`, `off` | Electrical load. |
 | `light` | `15` watts | `on`, `off` | Electrical load. |
-| `controller` | `0` watts | `online`, `offline` | One ESP32/Arduino per room. It monitors/controls that room. |
 
 ### Device IDs
 
@@ -50,22 +49,20 @@ Examples:
 
 - `drawing-fan-1`
 - `work1-light-2`
-- `work2-controller-1`
+- `work2-light-3`
 
-Each room has exactly six devices:
+Each room has exactly five devices:
 
 - `fan-1`
 - `fan-2`
 - `light-1`
 - `light-2`
 - `light-3`
-- `controller-1`
 
-The full system has exactly 18 devices:
+The full system has exactly 15 devices:
 
 - 6 fans total.
 - 9 lights total.
-- 3 controllers total.
 
 ## 3. Shared Schemas
 
@@ -86,32 +83,17 @@ Fan/light example:
 }
 ```
 
-Controller example:
-
-```json
-{
-  "id": "work1-controller-1",
-  "type": "controller",
-  "label": "Controller 1",
-  "room": "work1",
-  "status": "online",
-  "power_w": 0,
-  "power_rated_w": 0,
-  "last_changed": "2026-07-03T15:00:00Z"
-}
-```
-
 Fields:
 
 | Field | Type | Notes |
 | --- | --- | --- |
 | `id` | string | Stable device ID. |
-| `type` | string | `fan`, `light`, or `controller`. |
-| `label` | string | Human label, for example `Fan 1` or `Controller 1`. |
+| `type` | string | `fan` or `light`. |
+| `label` | string | Human label, for example `Fan 1` or `Light 3`. |
 | `room` | string | `drawing`, `work1`, or `work2`. |
-| `status` | string | Fans/lights use `on`/`off`; controllers use `online`/`offline`. |
-| `power_w` | number | Current draw. Fans/lights are `0` when off; controllers are always `0`. |
-| `power_rated_w` | number | Fan is `60`, light is `15`, controller is `0`. |
+| `status` | string | `on` or `off`. |
+| `power_w` | number | Current draw. `0` when off. |
+| `power_rated_w` | number | Fan is `60`, light is `15`. |
 | `last_changed` | string | ISO UTC timestamp from the last status change. |
 
 ### `RoomSummary`
@@ -122,8 +104,7 @@ Fields:
   "display_name": "Work Room 1",
   "power_w": 135,
   "loads_on": 3,
-  "controllers_online": 1,
-  "device_count": 6
+  "device_count": 5
 }
 ```
 
@@ -138,30 +119,26 @@ Fields:
       "display_name": "Drawing Room",
       "power_w": 75,
       "loads_on": 2,
-      "controllers_online": 1,
-      "device_count": 6
+      "device_count": 5
     },
     "work1": {
       "room": "work1",
       "display_name": "Work Room 1",
       "power_w": 135,
       "loads_on": 3,
-      "controllers_online": 1,
-      "device_count": 6
+      "device_count": 5
     },
     "work2": {
       "room": "work2",
       "display_name": "Work Room 2",
       "power_w": 165,
       "loads_on": 5,
-      "controllers_online": 1,
-      "device_count": 6
+      "device_count": 5
     }
   },
   "today_kwh": 4.2,
   "load_count_on": 10,
-  "controllers_online": 3,
-  "device_count": 18,
+  "device_count": 15,
   "server_time": "2026-07-03T16:00:00Z"
 }
 ```
@@ -169,9 +146,7 @@ Fields:
 Rules:
 
 - `total_power_w` must equal the sum of current `power_w` for fans and lights.
-- Controllers do not add to `total_power_w` or `today_kwh`.
 - `load_count_on` counts only fans/lights whose `status` is `on`.
-- `controllers_online` counts controllers whose `status` is `online`.
 - `today_kwh` is an estimate integrated from simulator samples since local midnight in
   `Asia/Dhaka`.
 
@@ -193,7 +168,7 @@ Fields:
 | Field | Type | Notes |
 | --- | --- | --- |
 | `id` | string | Stable ID for deduplication while the condition remains active. |
-| `type` | string | `after_hours`, `long_on`, or `controller_offline`. |
+| `type` | string | `after_hours` or `long_on`. |
 | `room` | string | Room where the alert applies. |
 | `message` | string | Human-readable summary from the backend. |
 | `since` | string | When the alert condition began. |
@@ -205,7 +180,6 @@ Alert rules:
   alert for that room.
 - `long_on`: if all five fans/lights in a room have been continuously on for more than two hours,
   emit one alert for that room.
-- `controller_offline`: if a room controller is `offline`, emit one alert for that room.
 - Alerts disappear from `GET /api/alerts` when their condition clears.
 - Jifat's bot must deduplicate proactive posts by `alert.id`.
 
@@ -281,7 +255,7 @@ Response `200`:
 
 ### `GET /api/devices`
 
-Returns all 18 devices.
+Returns all 15 devices.
 
 Response `200`:
 
@@ -339,7 +313,7 @@ Response `404`:
 
 ### `GET /api/rooms/{room}`
 
-Returns one room, its six devices, and room totals.
+Returns one room, its five devices, and room totals.
 
 Valid `room` path values:
 
@@ -404,21 +378,10 @@ Response `200`:
       "power_rated_w": 15,
       "last_changed": "2026-07-03T15:20:00Z"
     },
-    {
-      "id": "work1-controller-1",
-      "type": "controller",
-      "label": "Controller 1",
-      "room": "work1",
-      "status": "online",
-      "power_w": 0,
-      "power_rated_w": 0,
-      "last_changed": "2026-07-03T15:00:00Z"
-    }
   ],
   "power_w": 135,
   "loads_on": 3,
-  "controllers_online": 1,
-  "device_count": 6
+  "device_count": 5
 }
 ```
 
@@ -437,30 +400,26 @@ Response `200`:
       "display_name": "Drawing Room",
       "power_w": 75,
       "loads_on": 2,
-      "controllers_online": 1,
-      "device_count": 6
+      "device_count": 5
     },
     "work1": {
       "room": "work1",
       "display_name": "Work Room 1",
       "power_w": 135,
       "loads_on": 3,
-      "controllers_online": 1,
-      "device_count": 6
+      "device_count": 5
     },
     "work2": {
       "room": "work2",
       "display_name": "Work Room 2",
       "power_w": 165,
       "loads_on": 5,
-      "controllers_online": 1,
-      "device_count": 6
+      "device_count": 5
     }
   },
   "today_kwh": 4.2,
   "load_count_on": 10,
-  "controllers_online": 3,
-  "device_count": 18,
+  "device_count": 15,
   "server_time": "2026-07-03T16:00:00Z"
 }
 ```
@@ -539,8 +498,7 @@ Response `200`:
 
 Demo helper. Flips one device state:
 
-- Fans/lights: `on` to `off`, or `off` to `on`.
-- Controllers: `online` to `offline`, or `offline` to `online`.
+- `on` to `off`, or `off` to `on`.
 
 Request body: none.
 
@@ -573,26 +531,18 @@ Request body for fan/light:
 }
 ```
 
-Request body for controller:
-
-```json
-{
-  "status": "online"
-}
-```
-
 Response `200`:
 
 ```json
 {
   "device": {
-    "id": "work2-controller-1",
-    "type": "controller",
-    "label": "Controller 1",
+    "id": "work2-light-3",
+    "type": "light",
+    "label": "Light 3",
     "room": "work2",
-    "status": "online",
-    "power_w": 0,
-    "power_rated_w": 0,
+    "status": "on",
+    "power_w": 15,
+    "power_rated_w": 15,
     "last_changed": "2026-07-03T16:01:00Z"
   }
 }
@@ -606,8 +556,8 @@ Response `422` for invalid status:
     "code": "validation_error",
     "message": "status is invalid for this device type.",
     "details": {
-      "device_id": "work2-controller-1",
-      "status": "on"
+      "device_id": "work2-light-3",
+      "status": "online"
     }
   }
 }
@@ -733,30 +683,26 @@ Message:
         "display_name": "Drawing Room",
         "power_w": 75,
         "loads_on": 2,
-        "controllers_online": 1,
-        "device_count": 6
+        "device_count": 5
       },
       "work1": {
         "room": "work1",
         "display_name": "Work Room 1",
         "power_w": 135,
         "loads_on": 3,
-        "controllers_online": 1,
-        "device_count": 6
+        "device_count": 5
       },
       "work2": {
         "room": "work2",
         "display_name": "Work Room 2",
         "power_w": 165,
         "loads_on": 5,
-        "controllers_online": 1,
-        "device_count": 6
+        "device_count": 5
       }
     },
     "today_kwh": 4.2,
     "load_count_on": 10,
-    "controllers_online": 3,
-    "device_count": 18,
+    "device_count": 15,
     "server_time": "2026-07-03T16:00:00Z"
   },
   "alerts": [
@@ -832,16 +778,6 @@ Jifat and Arif can use these payloads before Saima's backend is ready.
       "last_changed": "2026-07-03T15:25:00Z"
     },
     {
-      "id": "drawing-controller-1",
-      "type": "controller",
-      "label": "Controller 1",
-      "room": "drawing",
-      "status": "online",
-      "power_w": 0,
-      "power_rated_w": 0,
-      "last_changed": "2026-07-03T15:00:00Z"
-    },
-    {
       "id": "work1-fan-1",
       "type": "fan",
       "label": "Fan 1",
@@ -890,16 +826,6 @@ Jifat and Arif can use these payloads before Saima's backend is ready.
       "power_w": 0,
       "power_rated_w": 15,
       "last_changed": "2026-07-03T15:20:00Z"
-    },
-    {
-      "id": "work1-controller-1",
-      "type": "controller",
-      "label": "Controller 1",
-      "room": "work1",
-      "status": "online",
-      "power_w": 0,
-      "power_rated_w": 0,
-      "last_changed": "2026-07-03T15:00:00Z"
     },
     {
       "id": "work2-fan-1",
@@ -951,16 +877,6 @@ Jifat and Arif can use these payloads before Saima's backend is ready.
       "power_rated_w": 15,
       "last_changed": "2026-07-03T13:44:00Z"
     },
-    {
-      "id": "work2-controller-1",
-      "type": "controller",
-      "label": "Controller 1",
-      "room": "work2",
-      "status": "online",
-      "power_w": 0,
-      "power_rated_w": 0,
-      "last_changed": "2026-07-03T15:00:00Z"
-    }
   ]
 }
 ```
@@ -976,30 +892,26 @@ Jifat and Arif can use these payloads before Saima's backend is ready.
       "display_name": "Drawing Room",
       "power_w": 75,
       "loads_on": 2,
-      "controllers_online": 1,
-      "device_count": 6
+      "device_count": 5
     },
     "work1": {
       "room": "work1",
       "display_name": "Work Room 1",
       "power_w": 135,
       "loads_on": 3,
-      "controllers_online": 1,
-      "device_count": 6
+      "device_count": 5
     },
     "work2": {
       "room": "work2",
       "display_name": "Work Room 2",
       "power_w": 165,
       "loads_on": 5,
-      "controllers_online": 1,
-      "device_count": 6
+      "device_count": 5
     }
   },
   "today_kwh": 4.2,
   "load_count_on": 10,
-  "controllers_online": 3,
-  "device_count": 18,
+  "device_count": 15,
   "server_time": "2026-07-03T16:00:00Z"
 }
 ```
@@ -1058,11 +970,10 @@ Jifat and Arif can use these payloads before Saima's backend is ready.
 
 ## 8. Acceptance Checklist
 
-- `GET /api/devices` returns exactly 18 valid devices.
-- Every room has exactly two fans, three lights, and one controller.
+- `GET /api/devices` returns exactly 15 valid devices.
+- Every room has exactly two fans and three lights.
 - `total_power_w` equals the sum of all fan/light `power_w` values.
 - `load_count_on` equals the number of fans/lights with `status: "on"`.
-- `controllers_online` equals the number of controllers with `status: "online"`.
 - Bot `!status` and dashboard show matching state after the same backend tick.
 - `POST /api/demo/clock` can force an after-hours alert for the demo.
 - `POST /api/demo/simulator` can pause random flips during demo recording.
