@@ -33,6 +33,9 @@ class Settings:
         int(os.environ["ALERT_CHANNEL_ID"]) if os.getenv("ALERT_CHANNEL_ID") else None
     )
     alert_poll_seconds: int = int(os.getenv("ALERT_POLL_SECONDS", "15"))
+    # Minimum gap before the same room/condition is re-announced (default 1 hour), so a flapping
+    # device can't spam the channel every poll.
+    alert_cooldown_seconds: int = int(os.getenv("ALERT_COOLDOWN_SECONDS", "3600"))
 
     @property
     def sqlite_path(self) -> str:

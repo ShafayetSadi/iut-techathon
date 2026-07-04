@@ -18,6 +18,7 @@ If no `DISCORD_TOKEN` is configured, `start()` is a no-op so the server still bo
 
 import asyncio
 import logging
+import time
 
 import discord
 import httpx
@@ -55,7 +56,10 @@ _intents.message_content = True
 bot = commands.Bot(command_prefix=settings.bot_command_prefix, intents=_intents)
 
 _task: asyncio.Task | None = None
-_announced_alert_ids: set[str] = set()
+# Last time (monotonic seconds) we announced each condition, keyed by "{type}-{room}". Used to
+# enforce a cooldown so a flapping device (the simulator toggles loads every few seconds) can't
+# re-trigger the same alert every poll.
+_last_announced_at: dict[str, float] = {}
 
 
 async def _ask_server(question: str, user: str) -> str:
@@ -132,7 +136,7 @@ async def ask(ctx: commands.Context, *, question: str = "") -> None:
 
 @tasks.loop(seconds=settings.alert_poll_seconds)
 async def alert_poller() -> None:
-    """Post newly-triggered alerts to the designated channel; never re-posts the same alert."""
+    """Post newly-triggered alerts to the designated channel, at most once per condition per cooldown."""
     try:
         async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
             response = await client.get(f"{settings.api_base}/api/alerts")
@@ -150,21 +154,21 @@ async def alert_poller() -> None:
             logger.error("ALERT_CHANNEL_ID %s not found or not accessible.", settings.alert_channel_id)
             return
 
-    active_ids: set[str] = set()
+    now = time.monotonic()
+    cooldown = settings.alert_cooldown_seconds
     for alert in alerts:
-        alert_id = alert.get("id")
-        if not alert_id:
+        # Throttle per condition (room + type), not per alert id: the backend re-issues an id every
+        # hour and the simulator flaps devices constantly, so id-level dedup would still spam. One
+        # announcement per condition per cooldown window (default 1h).
+        key = f"{alert.get('type', 'alert')}-{alert.get('room', '')}"
+        last = _last_announced_at.get(key)
+        if last is not None and now - last < cooldown:
             continue
-        active_ids.add(alert_id)
-        if alert_id not in _announced_alert_ids:
-            try:
-                await channel.send(f"⚠️ {alert.get('message', 'Alert triggered.')}")
-                _announced_alert_ids.add(alert_id)
-            except Exception:  # noqa: BLE001
-                logger.exception("Failed to post alert %s", alert_id)
-
-    # Forget cleared alerts so memory stays bounded (and a re-triggered condition can re-announce).
-    _announced_alert_ids.intersection_update(active_ids)
+        try:
+            await channel.send(f"⚠️ {alert.get('message', 'Alert triggered.')}")
+            _last_announced_at[key] = now
+        except Exception:  # noqa: BLE001
+            logger.exception("Failed to post alert %s", alert.get("id"))
 
 
 @alert_poller.before_loop
