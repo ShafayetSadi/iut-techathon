@@ -14,7 +14,9 @@ class Settings:
     tick_seconds: int = int(os.getenv("TICK_SECONDS", "3"))
     cors_origins: tuple[str, ...] = tuple(
         origin.strip()
-        for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+        for origin in os.getenv(
+            "CORS_ORIGINS", "http://localhost:5173,https://iut-techathon.vercel.app"
+        ).split(",")
         if origin.strip()
     )
     office_open: str = os.getenv("OFFICE_OPEN", "09:00")

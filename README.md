@@ -8,6 +8,11 @@ The project follows the deliverables in
 simulated electrical-device data, a live web dashboard, a Discord bot, a high-level system diagram,
 and a representative hardware schematic.
 
+## Live Deployment
+
+- Dashboard: https://iut-techathon.vercel.app/
+- Backend API: https://iut-techathon.onrender.com
+
 ## What This Builds
 
 - 3 rooms: Drawing Room, Work Room 1, Work Room 2.
