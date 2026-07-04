@@ -128,9 +128,10 @@ _Deliver a stub of `/api/devices` + `/ws` within the first day so Arif and Jifat
 
 ### Sadi — Circuit + Diagrams + Integration (`/docs`, `/hardware`)
 
-1. **Circuit schematic (Wokwi, ESP32)** — one representative room: ESP32 reading on/off state of
-   2 fans + 3 lights connected to one controller (buttons/switches as inputs, LEDs/relays as device stand-ins), optionally a
-   current-sense concept (e.g. ACS712 symbol) for power draw. Must make physical sense; label
+1. **Circuit schematic (Wokwi, ESP32)** — one representative room: ESP32 driving relay-switched
+   stand-in loads for 2 fans + 3 lights connected to one controller, plus an analog current-sense
+   concept (ACS712 stand-in) for power draw. Treat the sensor as optional realism/bonus detail,
+   not the source of truth for the app's live power totals. Must make physical sense; label
    everything. Export image + share link into `/docs`. _Tip from the PDF: try both Wokwi and
    Tinkercad first — Wokwi tends to pair better with AI-assisted iteration._
 2. **System diagram (NOT Mermaid)** — use Excalidraw / draw.io / Figma. Show the full flow:
