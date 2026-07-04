@@ -58,6 +58,54 @@ export interface Snapshot {
   alerts: Alert[]
 }
 
+/** One sample on the power-history trend (`GET /api/history`). */
+export interface HistoryPoint {
+  ts: string
+  total_power_w: number
+  loads_on: number
+}
+
+export interface HistoryResponse {
+  minutes: number
+  points: HistoryPoint[]
+}
+
+/** Backend liveness from `GET /health`. */
+export interface HealthStatus {
+  status: string
+  server_time: string
+  database: string
+  simulator: SimulatorState
+}
+
+export interface SimulatorState {
+  running: boolean
+  tick_seconds: number
+}
+
+export interface ClockState {
+  override_active: boolean
+  server_time: string
+  business_timezone: string
+  local_time: string
+}
+
+/** Demo-control state from `GET /api/demo/state`. */
+export interface DemoState {
+  clock: ClockState
+  simulator: SimulatorState
+}
+
+/** One room with its five devices (`GET /api/rooms/{room}`). */
+export interface RoomDetail {
+  room: RoomId
+  display_name: string
+  devices: Device[]
+  power_w: number
+  loads_on: number
+  device_count: number
+}
+
 /** Live-connection lifecycle surfaced to the user. */
 export type ConnectionState =
   | 'connecting' // first connect, no data yet
