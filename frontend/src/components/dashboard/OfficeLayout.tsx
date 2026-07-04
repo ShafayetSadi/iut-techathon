@@ -51,7 +51,7 @@ export function OfficeLayout({
           return (
             <div
               key={room}
-              className={`relative overflow-hidden rounded-xl border p-3 transition ${
+              className={`relative overflow-visible rounded-xl border p-3 transition ${
                 isBusiest
                   ? 'border-amber/30 bg-amber/[0.04]'
                   : 'border-hairline bg-white/[0.02]'
@@ -92,13 +92,27 @@ export function OfficeLayout({
                 </span>
               </div>
 
-              <div className="relative mt-4 flex flex-wrap items-end gap-1">
-                {fans.map((d) => (
-                  <DeviceIndicator key={d.id} device={d} onSelect={onSelect} />
-                ))}
-                {lights.map((d) => (
-                  <DeviceIndicator key={d.id} device={d} onSelect={onSelect} />
-                ))}
+              <div className="relative mt-4">
+                <div className="flex justify-center gap-3 pb-20">
+                  {fans.map((d) => (
+                    <DeviceIndicator
+                      key={d.id}
+                      device={d}
+                      onSelect={onSelect}
+                      tooltipPlacement="below"
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-center gap-3">
+                  {lights.map((d) => (
+                    <DeviceIndicator
+                      key={d.id}
+                      device={d}
+                      onSelect={onSelect}
+                      tooltipPlacement="above"
+                    />
+                  ))}
+                </div>
               </div>
 
               {isBusiest && (
