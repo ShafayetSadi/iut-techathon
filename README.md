@@ -190,6 +190,7 @@ curl -X POST http://localhost:8000/api/demo/clock \
 The hardware deliverable is a Wokwi concept for one representative room: one ESP32 controlling or
 sensing 2 fan stand-ins and 3 light stand-ins. The visible LEDs/motors are simulation stand-ins for
 real appliances, and the optional current-sense concept is only for realism.
+Simulation Link : https://wokwi.com/projects/468594691328318465
 
 ![Representative room schematic](hardware/schematic.png)
 
