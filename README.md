@@ -10,6 +10,9 @@ The fixed office model is:
 - Total monitored devices: 15.
 - Fans use 60W when on, lights use 15W when on.
 
+## Live Dashboard
+[Live Dashboard UI](docs/ui.jpg)
+
 ## Architecture
 
 ```text
