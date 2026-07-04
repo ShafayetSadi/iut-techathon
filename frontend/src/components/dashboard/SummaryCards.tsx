@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Zap, Power, Gauge, Cpu, TriangleAlert } from 'lucide-react'
+import { Zap, Power, Gauge, TriangleAlert } from 'lucide-react'
 import type { Summary } from '../../types/dashboard'
 import { formatKwh } from '../../lib/format'
 
@@ -9,15 +9,15 @@ interface Props {
 }
 
 /**
- * Five at-a-glance cards. Total Power is deliberately the loudest; the others
+ * Four at-a-glance cards. Total Power is deliberately the loudest; the others
  * stay quiet unless something needs attention (alerts turn orange/red).
  */
 export function SummaryCards({ summary, alertCount }: Props) {
-  const loadsTotal = 15 // 3 rooms × (2 fans + 3 lights)
-  const controllersTotal = 3
+  // Total load count comes straight from the backend summary, never assumed.
+  const loadsTotal = summary.device_count
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {/* Hero card — Total Power */}
       <div className="col-span-2 flex flex-col justify-between overflow-hidden rounded-2xl border border-cyan/20 bg-gradient-to-br from-cyan/[0.12] to-transparent p-5 lg:col-span-1">
         <div className="flex items-center gap-2 text-cyan">
@@ -48,18 +48,6 @@ export function SummaryCards({ summary, alertCount }: Props) {
         accent="text-amber"
         value={formatKwh(summary.today_kwh).replace(' kWh', '')}
         suffix="kWh"
-      />
-
-      <Card
-        icon={<Cpu className="h-4 w-4" />}
-        label="Controllers"
-        accent={
-          summary.controllers_online < controllersTotal
-            ? 'text-warn'
-            : 'text-cyan'
-        }
-        value={`${summary.controllers_online}`}
-        suffix={`/ ${controllersTotal} online`}
       />
 
       {/* Alerts card — escalates color when alerts exist */}

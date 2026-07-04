@@ -12,6 +12,10 @@ The single hard rule of the challenge: the dashboard and the Discord bot must **
 We enforce this by giving the system exactly one place where device state lives — the **SQLite
 database** — and making every other component a _reader_ of it.
 
+The submitted high-level non-Mermaid diagram is in [`architecture.png`](./architecture.png).
+
+![High-level system architecture diagram](./architecture.png)
+
 ```text
                  ┌──────────────────────────────────────────────┐
                  │                 BACKEND (FastAPI)             │
@@ -123,7 +127,7 @@ iut-techathon/
 │   ├── TEAM_PLAN.md
 │   ├── architecture.md       # ← this file
 │   ├── api-contract.md       # trimmed copy of §8 for quick reference
-│   ├── system-diagram.png    # the submitted (non-Mermaid) diagram
+│   ├── architecture.png      # the submitted (non-Mermaid) system diagram
 │   └── Hackathon Problem Statement (Preliminary Round).pdf
 └── README.md
 ```
@@ -504,7 +508,7 @@ tick loop flips work1-light-2 OFF → writes DB (last_changed updated)
 
 | Problem-statement deliverable   | Where it's satisfied                                         |
 | ------------------------------- | ------------------------------------------------------------ |
-| High-level system diagram       | `docs/system-diagram.png` (§1 is the source)                 |
+| High-level system diagram       | `docs/architecture.png` (§1 is the source)                   |
 | Hardware/electrical schematic   | `hardware/wokwi/`                                            |
 | Simulated dynamic device data   | `backend/app/simulator.py` + `devices`/`state_events` (§5–6) |
 | Live device status panel        | `DeviceStatusPanel` via WS (§9)                              |

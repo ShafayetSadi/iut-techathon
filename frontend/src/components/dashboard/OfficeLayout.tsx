@@ -8,14 +8,21 @@ interface Props {
   summary: Summary
   busiestRoom: RoomId | null
   onSelect?: (device: Device) => void
+  onSelectRoom?: (room: RoomId) => void
 }
 
 /**
  * Top-view floor plan — the visual centerpiece. Three connected rooms, each
- * holding its 2 fans, 3 lights and 1 controller, over an abstract furniture
- * hint. Device visuals are driven entirely by backend status.
+ * holding its 2 fans and 3 lights, over an abstract furniture hint. Device
+ * visuals are driven entirely by backend status.
  */
-export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props) {
+export function OfficeLayout({
+  devices,
+  summary,
+  busiestRoom,
+  onSelect,
+  onSelectRoom,
+}: Props) {
   const byRoom = groupByRoom(devices)
 
   return (
@@ -27,7 +34,9 @@ export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props)
           </h2>
           <p className="text-xs text-muted">Top-view live device map</p>
         </div>
-        <span className="text-xs text-faint">3 rooms · 18 devices</span>
+        <span className="text-xs text-faint">
+          {ROOM_ORDER.length} rooms · {summary.device_count} devices
+        </span>
       </header>
 
       <div className="grid flex-1 gap-3 md:grid-cols-3">
@@ -36,67 +45,82 @@ export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props)
           const roomSummary = summary.per_room[room]
           const fans = roomDevices.filter((d) => d.type === 'fan')
           const lights = roomDevices.filter((d) => d.type === 'light')
-          const controller = roomDevices.find((d) => d.type === 'controller')
-          const controllerOffline = controller?.status === 'offline'
+          const loadsOn = roomSummary?.loads_on ?? 0
           const isBusiest = busiestRoom === room && (roomSummary?.power_w ?? 0) > 0
 
           return (
             <div
               key={room}
-              className={`relative overflow-hidden rounded-xl border p-3 transition ${
-                controllerOffline
-                  ? 'border-crit/40 bg-crit/5'
-                  : isBusiest
-                    ? 'border-amber/30 bg-amber/[0.04]'
-                    : 'border-hairline bg-white/[0.02]'
+              className={`relative overflow-visible rounded-xl border p-3 transition ${
+                isBusiest
+                  ? 'border-amber/30 bg-amber/[0.04]'
+                  : 'border-hairline bg-white/[0.02]'
               }`}
             >
               {/* Furniture hint sits behind the devices */}
               <Furniture room={room} />
 
-              <div className="relative flex items-start justify-between">
-                <div>
+              <div className="relative flex items-start justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => onSelectRoom?.(room)}
+                  className="min-w-0 rounded-lg text-left outline-none transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan/50"
+                  title={`Open ${formatRoomName(room)} details`}
+                >
                   <h3 className="text-sm font-semibold text-ink">
                     {formatRoomName(room)}
                   </h3>
                   <p className="tnum text-xs text-muted">
                     {formatWatts(roomSummary?.power_w ?? 0)} ·{' '}
-                    {roomSummary?.loads_on ?? 0}/5 on
+                    {roomSummary?.loads_on ?? 0}/{roomSummary?.device_count ?? 0}{' '}
+                    on
                   </p>
-                </div>
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                    controllerOffline
-                      ? 'bg-crit/15 text-crit'
-                      : 'bg-good/15 text-good'
-                  }`}
-                >
+                </button>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  {isBusiest && (
+                    <span className="inline-flex items-center rounded-full border border-amber/25 bg-amber/10 px-2 py-0.5 text-[10px] font-semibold text-amber">
+                      Highest usage
+                    </span>
+                  )}
                   <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      controllerOffline ? 'bg-crit' : 'bg-good'
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      loadsOn > 0
+                        ? 'bg-amber/15 text-amber'
+                        : 'bg-white/5 text-faint'
                     }`}
-                  />
-                  {controllerOffline ? 'Offline' : 'Online'}
-                </span>
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        loadsOn > 0 ? 'bg-amber' : 'bg-slate'
+                      }`}
+                    />
+                    {loadsOn > 0 ? 'Active' : 'Idle'}
+                  </span>
+                </div>
               </div>
 
-              <div className="relative mt-4 flex flex-wrap items-end gap-1">
-                {fans.map((d) => (
-                  <DeviceIndicator key={d.id} device={d} onSelect={onSelect} />
-                ))}
-                {lights.map((d) => (
-                  <DeviceIndicator key={d.id} device={d} onSelect={onSelect} />
-                ))}
-                {controller && (
-                  <DeviceIndicator device={controller} onSelect={onSelect} />
-                )}
+              <div className="relative mt-4">
+                <div className="flex justify-center gap-3 pb-20">
+                  {fans.map((d) => (
+                    <DeviceIndicator
+                      key={d.id}
+                      device={d}
+                      onSelect={onSelect}
+                      tooltipPlacement="below"
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-center gap-3">
+                  {lights.map((d) => (
+                    <DeviceIndicator
+                      key={d.id}
+                      device={d}
+                      onSelect={onSelect}
+                      tooltipPlacement="above"
+                    />
+                  ))}
+                </div>
               </div>
-
-              {isBusiest && !controllerOffline && (
-                <span className="relative mt-3 inline-block rounded-md bg-amber/10 px-2 py-0.5 text-[10px] font-medium text-amber">
-                  Highest usage
-                </span>
-              )}
             </div>
           )
         })}

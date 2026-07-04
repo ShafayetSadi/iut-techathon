@@ -58,22 +58,16 @@ export function deriveSummary(devices: Device[], serverTime: string): Summary {
   }
   let total = 0
   let loadsOn = 0
-  let controllersOnline = 0
 
   for (const d of devices) {
     const r = rooms[d.room]
     if (!r) continue
     r.device_count += 1
-    if (isLoad(d)) {
-      if (d.status === 'on') {
-        total += d.power_w
-        loadsOn += 1
-        r.power_w += d.power_w
-        r.loads_on += 1
-      }
-    } else if (d.status === 'online') {
-      controllersOnline += 1
-      r.controllers_online += 1
+    if (d.status === 'on') {
+      total += d.power_w
+      loadsOn += 1
+      r.power_w += d.power_w
+      r.loads_on += 1
     }
   }
 
@@ -82,7 +76,6 @@ export function deriveSummary(devices: Device[], serverTime: string): Summary {
     per_room: rooms,
     today_kwh: 0,
     load_count_on: loadsOn,
-    controllers_online: controllersOnline,
     device_count: devices.length,
     server_time: serverTime,
   }
@@ -95,7 +88,6 @@ function emptyRoom(room: 'drawing' | 'work1' | 'work2'): Summary['per_room'][key
     display_name: names[room],
     power_w: 0,
     loads_on: 0,
-    controllers_online: 0,
     device_count: 0,
   }
 }

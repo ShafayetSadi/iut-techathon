@@ -1,4 +1,4 @@
-import { Fan, Lightbulb, Cpu } from 'lucide-react'
+import { Fan, Lightbulb } from 'lucide-react'
 import type { Device, RoomId, RoomSummary } from '../../types/dashboard'
 import { formatRoomName } from '../../lib/room'
 import { formatRelative, formatWatts } from '../../lib/format'
@@ -8,36 +8,47 @@ interface Props {
   devices: Device[]
   summary?: RoomSummary
   onSelect?: (device: Device) => void
+  onOpenRoom?: (room: RoomId) => void
 }
 
-/** Scannable per-room card listing all six devices with status + power. */
-export function RoomDevicePanel({ room, devices, summary, onSelect }: Props) {
-  const controllerOffline = devices.some(
-    (d) => d.type === 'controller' && d.status === 'offline',
-  )
+/** Scannable per-room card listing all five loads with status + power. */
+export function RoomDevicePanel({
+  room,
+  devices,
+  summary,
+  onSelect,
+  onOpenRoom,
+}: Props) {
+  const loadsOn = summary?.loads_on ?? 0
 
   return (
     <section className="flex flex-col rounded-2xl border border-hairline bg-surface p-4 backdrop-blur">
       <header className="flex items-start justify-between">
-        <div>
+        <button
+          type="button"
+          onClick={() => onOpenRoom?.(room)}
+          className="rounded-lg text-left outline-none transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan/50"
+          title={`Open ${formatRoomName(room)} details`}
+        >
           <h3 className="text-sm font-semibold text-ink">
             {formatRoomName(room)}
           </h3>
           <p className="tnum text-xs text-muted">
-            {formatWatts(summary?.power_w ?? 0)} · {summary?.loads_on ?? 0}/5 on
+            {formatWatts(summary?.power_w ?? 0)} · {loadsOn}/
+            {summary?.device_count ?? devices.length} on
           </p>
-        </div>
+        </button>
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-            controllerOffline ? 'bg-crit/15 text-crit' : 'bg-good/15 text-good'
+            loadsOn > 0 ? 'bg-amber/15 text-amber' : 'bg-white/5 text-faint'
           }`}
         >
           <span
             className={`h-1.5 w-1.5 rounded-full ${
-              controllerOffline ? 'bg-crit' : 'bg-good'
+              loadsOn > 0 ? 'bg-amber' : 'bg-slate'
             }`}
           />
-          Controller {controllerOffline ? 'offline' : 'online'}
+          {loadsOn > 0 ? 'Active' : 'Idle'}
         </span>
       </header>
 
@@ -58,8 +69,6 @@ function DeviceRow({
   onSelect?: (device: Device) => void
 }) {
   const on = device.status === 'on'
-  const online = device.status === 'online'
-  const active = on || online
 
   return (
     <li>
@@ -72,19 +81,15 @@ function DeviceRow({
         <span className="min-w-0 flex-1 truncate whitespace-nowrap text-sm text-ink">
           {device.label}
         </span>
-        {device.type !== 'controller' ? (
-          <span
-            className={`tnum w-12 shrink-0 text-right text-xs ${on ? 'text-ink' : 'text-faint'}`}
-          >
-            {formatWatts(device.power_w)}
-          </span>
-        ) : (
-          <span className="w-12 shrink-0" aria-hidden />
-        )}
+        <span
+          className={`tnum w-12 shrink-0 text-right text-xs ${on ? 'text-ink' : 'text-faint'}`}
+        >
+          {formatWatts(device.power_w)}
+        </span>
         <span className="hidden w-16 shrink-0 text-right text-[11px] text-faint sm:block">
           {formatRelative(device.last_changed)}
         </span>
-        <StatusBadge device={device} active={active} />
+        <StatusBadge on={on} />
       </button>
     </li>
   )
@@ -92,7 +97,6 @@ function DeviceRow({
 
 function RowIcon({ device }: { device: Device }) {
   const on = device.status === 'on'
-  const online = device.status === 'online'
   if (device.type === 'fan') {
     return (
       <Fan
@@ -100,43 +104,22 @@ function RowIcon({ device }: { device: Device }) {
       />
     )
   }
-  if (device.type === 'light') {
-    return (
-      <Lightbulb
-        className={`h-4 w-4 shrink-0 ${on ? 'text-amber' : 'text-slate'}`}
-        fill={on ? 'rgba(250,204,21,0.35)' : 'none'}
-      />
-    )
-  }
   return (
-    <Cpu className={`h-4 w-4 shrink-0 ${online ? 'text-cyan' : 'text-crit'}`} />
+    <Lightbulb
+      className={`h-4 w-4 shrink-0 ${on ? 'text-amber' : 'text-slate'}`}
+      fill={on ? 'rgba(250,204,21,0.35)' : 'none'}
+    />
   )
 }
 
-function StatusBadge({ device, active }: { device: Device; active: boolean }) {
-  const label =
-    device.type === 'controller'
-      ? active
-        ? 'ONLINE'
-        : 'OFFLINE'
-      : active
-        ? 'ON'
-        : 'OFF'
-
-  const cls =
-    device.type === 'controller'
-      ? active
-        ? 'bg-good/15 text-good'
-        : 'bg-crit/15 text-crit'
-      : active
-        ? 'bg-amber/15 text-amber'
-        : 'bg-white/5 text-faint'
-
+function StatusBadge({ on }: { on: boolean }) {
   return (
     <span
-      className={`w-14 shrink-0 rounded-md px-1.5 py-0.5 text-center text-[10px] font-semibold ${cls}`}
+      className={`w-14 shrink-0 rounded-md px-1.5 py-0.5 text-center text-[10px] font-semibold ${
+        on ? 'bg-amber/15 text-amber' : 'bg-white/5 text-faint'
+      }`}
     >
-      {label}
+      {on ? 'ON' : 'OFF'}
     </span>
   )
 }

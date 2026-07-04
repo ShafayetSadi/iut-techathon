@@ -5,12 +5,12 @@
  */
 
 export type RoomId = 'drawing' | 'work1' | 'work2'
-export type DeviceType = 'fan' | 'light' | 'controller'
+export type DeviceType = 'fan' | 'light'
 
-/** Fans/lights use on|off; controllers use online|offline. */
-export type DeviceStatus = 'on' | 'off' | 'online' | 'offline'
+/** Fans and lights use on|off. */
+export type DeviceStatus = 'on' | 'off'
 
-export type AlertType = 'after_hours' | 'long_on' | 'controller_offline'
+export type AlertType = 'after_hours' | 'long_on'
 
 export interface Device {
   id: string
@@ -28,7 +28,6 @@ export interface RoomSummary {
   display_name: string
   power_w: number
   loads_on: number
-  controllers_online: number
   device_count: number
 }
 
@@ -37,7 +36,6 @@ export interface Summary {
   per_room: Record<RoomId, RoomSummary>
   today_kwh: number
   load_count_on: number
-  controllers_online: number
   device_count: number
   server_time: string
 }
@@ -58,6 +56,54 @@ export interface Snapshot {
   devices: Device[]
   summary: Summary
   alerts: Alert[]
+}
+
+/** One sample on the power-history trend (`GET /api/history`). */
+export interface HistoryPoint {
+  ts: string
+  total_power_w: number
+  loads_on: number
+}
+
+export interface HistoryResponse {
+  minutes: number
+  points: HistoryPoint[]
+}
+
+/** Backend liveness from `GET /health`. */
+export interface HealthStatus {
+  status: string
+  server_time: string
+  database: string
+  simulator: SimulatorState
+}
+
+export interface SimulatorState {
+  running: boolean
+  tick_seconds: number
+}
+
+export interface ClockState {
+  override_active: boolean
+  server_time: string
+  business_timezone: string
+  local_time: string
+}
+
+/** Demo-control state from `GET /api/demo/state`. */
+export interface DemoState {
+  clock: ClockState
+  simulator: SimulatorState
+}
+
+/** One room with its five devices (`GET /api/rooms/{room}`). */
+export interface RoomDetail {
+  room: RoomId
+  display_name: string
+  devices: Device[]
+  power_w: number
+  loads_on: number
+  device_count: number
 }
 
 /** Live-connection lifecycle surfaced to the user. */

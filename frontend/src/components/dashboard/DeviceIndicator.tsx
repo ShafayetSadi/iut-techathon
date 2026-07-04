@@ -1,10 +1,11 @@
-import { Fan, Lightbulb, Cpu } from 'lucide-react'
+import { Fan, Lightbulb } from 'lucide-react'
 import type { Device } from '../../types/dashboard'
 import { formatRelative, formatWatts } from '../../lib/format'
 
 interface Props {
   device: Device
   onSelect?: (device: Device) => void
+  tooltipPlacement?: 'above' | 'below'
 }
 
 /**
@@ -12,20 +13,11 @@ interface Props {
  * backend `status`:
  *  - light on  → warm amber glow
  *  - fan on    → icon spins
- *  - controller online/offline → cyan / red chip
- * Off/inactive devices are muted slate. A hover card exposes the details.
+ * Off devices are muted slate. A hover card exposes the details.
  */
-export function DeviceIndicator({ device, onSelect }: Props) {
+export function DeviceIndicator({ device, onSelect, tooltipPlacement = 'below' }: Props) {
   const on = device.status === 'on'
-  const online = device.status === 'online'
-  const statusLabel =
-    device.type === 'controller'
-      ? online
-        ? 'Online'
-        : 'Offline'
-      : on
-        ? 'ON'
-        : 'OFF'
+  const statusLabel = on ? 'ON' : 'OFF'
 
   return (
     <button
@@ -33,21 +25,25 @@ export function DeviceIndicator({ device, onSelect }: Props) {
       onClick={() => onSelect?.(device)}
       aria-label={`${device.label}, ${statusLabel}, ${formatWatts(device.power_w)}`}
       title={`${device.label} · ${statusLabel}`}
-      className="group relative flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 outline-none transition hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-cyan/60"
+      className="group relative z-0 flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 outline-none transition hover:z-50 hover:bg-white/5 focus-visible:z-50 focus-visible:ring-2 focus-visible:ring-cyan/60"
     >
       {renderIcon(device)}
       <span
         className={`text-[10px] font-medium leading-none ${
-          on || online ? 'text-ink' : 'text-faint'
+          on ? 'text-ink' : 'text-faint'
         }`}
       >
-        {device.label.replace('Controller', 'Ctrl')}
+        {device.label}
       </span>
 
-      {/* Hover / focus detail card */}
+      {/* Hover / focus detail card — opens below so it stays inside the room card */}
       <span
         role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 w-40 -translate-x-1/2 scale-95 rounded-lg border border-hairline bg-base-deep/95 p-2.5 text-left opacity-0 shadow-xl backdrop-blur transition group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100"
+        className={`pointer-events-none absolute left-1/2 z-50 w-36 -translate-x-1/2 scale-95 rounded-lg border border-hairline bg-base-deep p-2.5 text-left opacity-0 shadow-xl transition group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100 ${
+          tooltipPlacement === 'above'
+            ? 'bottom-full mb-1.5'
+            : 'top-full mt-1.5'
+        }`}
       >
         <span className="block text-xs font-semibold text-ink">{device.label}</span>
         <span className="mt-1 flex items-center justify-between text-[11px] text-muted">
@@ -80,48 +76,27 @@ function renderIcon(device: Device) {
     )
   }
 
-  if (device.type === 'light') {
-    const on = device.status === 'on'
-    return (
-      <span className="relative grid h-9 w-9 place-items-center">
-        {on && (
-          <span
-            className="absolute inset-0 rounded-full bg-amber/30 blur-md"
-            aria-hidden
-          />
-        )}
-        <Lightbulb
-          className={`relative h-7 w-7 ${
-            on ? 'text-amber drop-shadow-[0_0_6px_rgba(250,204,21,0.7)]' : 'text-slate'
-          }`}
-          strokeWidth={1.75}
-          fill={on ? 'rgba(250,204,21,0.35)' : 'none'}
-        />
-      </span>
-    )
-  }
-
-  // controller
-  const online = device.status === 'online'
+  // light
+  const on = device.status === 'on'
   return (
     <span className="relative grid h-9 w-9 place-items-center">
-      <span
-        className={`absolute right-1 top-1 h-2 w-2 rounded-full ${
-          online ? 'bg-good' : 'bg-crit animate-warn'
+      {on && (
+        <span
+          className="absolute inset-0 rounded-full bg-amber/30 blur-md"
+          aria-hidden
+        />
+      )}
+      <Lightbulb
+        className={`relative h-7 w-7 ${
+          on ? 'text-amber drop-shadow-[0_0_6px_rgba(250,204,21,0.7)]' : 'text-slate'
         }`}
-        aria-hidden
-      />
-      <Cpu
-        className={`h-7 w-7 ${online ? 'text-cyan' : 'text-crit'}`}
         strokeWidth={1.75}
+        fill={on ? 'rgba(250,204,21,0.35)' : 'none'}
       />
     </span>
   )
 }
 
 function statusColor(device: Device): string {
-  if (device.type === 'controller') {
-    return device.status === 'online' ? 'text-good' : 'text-crit'
-  }
   return device.status === 'on' ? 'text-amber' : 'text-faint'
 }

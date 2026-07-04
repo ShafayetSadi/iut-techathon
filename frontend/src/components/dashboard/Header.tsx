@@ -30,7 +30,7 @@ export function Header({ connection, usingFallback, serverTime }: Props) {
             Office Energy Command
           </h1>
           <p className="text-xs text-muted sm:text-sm">
-            Live monitoring for lights, fans, and room controllers
+            Live monitoring for every light and fan across the office
           </p>
         </div>
       </div>

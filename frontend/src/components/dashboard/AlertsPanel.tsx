@@ -1,10 +1,4 @@
-import {
-  ShieldCheck,
-  Clock,
-  MoonStar,
-  PlugZap,
-  TriangleAlert,
-} from 'lucide-react'
+import { ShieldCheck, Clock, MoonStar, TriangleAlert } from 'lucide-react'
 import type { Alert, AlertType } from '../../types/dashboard'
 import { formatRoomName } from '../../lib/room'
 import { formatRelative, formatTimestamp } from '../../lib/format'
@@ -14,13 +8,9 @@ interface Props {
   alerts: Alert[]
 }
 
-const META: Record<
-  AlertType,
-  { label: string; icon: typeof Clock; tone: 'crit' | 'warn' }
-> = {
-  after_hours: { label: 'After hours', icon: MoonStar, tone: 'warn' },
-  long_on: { label: 'Left on too long', icon: Clock, tone: 'warn' },
-  controller_offline: { label: 'Controller offline', icon: PlugZap, tone: 'crit' },
+const META: Record<AlertType, { label: string; icon: typeof Clock }> = {
+  after_hours: { label: 'After hours', icon: MoonStar },
+  long_on: { label: 'Left on too long', icon: Clock },
 }
 
 export function AlertsPanel({ alerts }: Props) {
@@ -58,34 +48,20 @@ export function AlertsPanel({ alerts }: Props) {
             const meta = META[alert.type] ?? {
               label: alert.type,
               icon: TriangleAlert,
-              tone: 'warn' as const,
             }
             const Icon = meta.icon
-            const crit = meta.tone === 'crit'
             return (
               <li
                 key={alert.id}
-                className={`animate-rise rounded-xl border p-3 ${
-                  crit
-                    ? 'border-crit/40 bg-crit/10'
-                    : 'border-warn/30 bg-warn/[0.08]'
-                }`}
+                className="animate-rise rounded-xl border border-warn/30 bg-warn/[0.08] p-3"
               >
                 <div className="flex items-start gap-2.5">
-                  <span
-                    className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg ${
-                      crit ? 'bg-crit/20 text-crit' : 'bg-warn/20 text-warn'
-                    }`}
-                  >
+                  <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-warn/20 text-warn">
                     <Icon className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <span
-                        className={`text-xs font-semibold ${
-                          crit ? 'text-crit' : 'text-warn'
-                        }`}
-                      >
+                      <span className="text-xs font-semibold text-warn">
                         {meta.label}
                       </span>
                       <span className="shrink-0 text-[10px] text-faint">
