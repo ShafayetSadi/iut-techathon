@@ -39,7 +39,15 @@
       "Bash(ls -la shot1.png)",
       "Bash(google-chrome --headless --disable-gpu --no-sandbox --hide-scrollbars --window-size=1440,1400 --screenshot=shot2.png --virtual-time-budget=6000 http://localhost:5173/)",
       "Bash(npx tsc *)",
-      "Bash(google-chrome --headless --disable-gpu --no-sandbox --hide-scrollbars --window-size=1440,1350 --screenshot=shot3.png --virtual-time-budget=6000 http://localhost:5173/)"
+      "Bash(google-chrome --headless --disable-gpu --no-sandbox --hide-scrollbars --window-size=1440,1350 --screenshot=shot3.png --virtual-time-budget=6000 http://localhost:5173/)",
+      "Bash(curl -s http://127.0.0.1:8000/api/devices)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); devs=d['devices']; print\\('count',len\\(devs\\)\\); import collections; print\\('types',collections.Counter\\(x['type'] for x in devs\\)\\); print\\('statuses',set\\(x['status'] for x in devs\\)\\); print\\('sample',json.dumps\\(devs[0]\\)\\)\")",
+      "Bash(curl -s http://127.0.0.1:8000/api/alerts)",
+      "Bash(python3 -c \"import sys,json,collections; d=json.load\\(sys.stdin\\)['devices']; print\\('count',len\\(d\\)\\); print\\('types',collections.Counter\\(x['type'] for x in d\\)\\); print\\('statuses',sorted\\(set\\(x['status'] for x in d\\)\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; s=json.load\\(sys.stdin\\); print\\('top keys',list\\(s.keys\\(\\)\\)\\); print\\('room keys',list\\(s['per_room']['drawing'].keys\\(\\)\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; print\\(sorted\\(set\\(a['type'] for a in json.load\\(sys.stdin\\)['alerts']\\)\\)\\)\")",
+      "Bash(nohup .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000)",
+      "Bash(python3 -c \"import sys,json; s=json.load\\(sys.stdin\\); print\\('top',list\\(s.keys\\(\\)\\)\\); print\\('room',list\\(s['per_room']['drawing'].keys\\(\\)\\)\\)\")"
     ]
   }
 }

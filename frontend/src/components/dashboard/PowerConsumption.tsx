@@ -55,7 +55,7 @@ export function PowerConsumption({ summary, busiestRoom }: Props) {
                 <span className="tnum text-ink">
                   {formatWatts(power)}
                   <span className="ml-1.5 text-faint">
-                    {rs?.loads_on ?? 0}/5 on
+                    {rs?.loads_on ?? 0}/{rs?.device_count ?? 0} on
                   </span>
                 </span>
               </div>

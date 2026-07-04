@@ -10,8 +10,10 @@ interface Props {
   onSelect?: (device: Device) => void
 }
 
-/** Scannable per-room card listing all five devices with status + power. */
+/** Scannable per-room card listing all five loads with status + power. */
 export function RoomDevicePanel({ room, devices, summary, onSelect }: Props) {
+  const loadsOn = summary?.loads_on ?? 0
+
   return (
     <section className="flex flex-col rounded-2xl border border-hairline bg-surface p-4 backdrop-blur">
       <header className="flex items-start justify-between">
@@ -20,12 +22,21 @@ export function RoomDevicePanel({ room, devices, summary, onSelect }: Props) {
             {formatRoomName(room)}
           </h3>
           <p className="tnum text-xs text-muted">
-            {formatWatts(summary?.power_w ?? 0)} · {summary?.loads_on ?? 0}/5 on
+            {formatWatts(summary?.power_w ?? 0)} · {loadsOn}/
+            {summary?.device_count ?? devices.length} on
           </p>
         </div>
-        <span className="inline-flex items-center gap-1 rounded-full bg-good/15 px-2 py-0.5 text-[10px] font-medium text-good">
-          <span className="h-1.5 w-1.5 rounded-full bg-good" />
-          Live data
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+            loadsOn > 0 ? 'bg-amber/15 text-amber' : 'bg-white/5 text-faint'
+          }`}
+        >
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              loadsOn > 0 ? 'bg-amber' : 'bg-slate'
+            }`}
+          />
+          {loadsOn > 0 ? 'Active' : 'Idle'}
         </span>
       </header>
 
@@ -66,7 +77,7 @@ function DeviceRow({
         <span className="hidden w-16 shrink-0 text-right text-[11px] text-faint sm:block">
           {formatRelative(device.last_changed)}
         </span>
-        <StatusBadge active={on} />
+        <StatusBadge on={on} />
       </button>
     </li>
   )
@@ -81,26 +92,22 @@ function RowIcon({ device }: { device: Device }) {
       />
     )
   }
-  if (device.type === 'light') {
-    return (
-      <Lightbulb
-        className={`h-4 w-4 shrink-0 ${on ? 'text-amber' : 'text-slate'}`}
-        fill={on ? 'rgba(250,204,21,0.35)' : 'none'}
-      />
-    )
-  }
-  return null
+  return (
+    <Lightbulb
+      className={`h-4 w-4 shrink-0 ${on ? 'text-amber' : 'text-slate'}`}
+      fill={on ? 'rgba(250,204,21,0.35)' : 'none'}
+    />
+  )
 }
 
-function StatusBadge({ active }: { active: boolean }) {
-  const label = active ? 'ON' : 'OFF'
-  const cls = active ? 'bg-amber/15 text-amber' : 'bg-white/5 text-faint'
-
+function StatusBadge({ on }: { on: boolean }) {
   return (
     <span
-      className={`w-14 shrink-0 rounded-md px-1.5 py-0.5 text-center text-[10px] font-semibold ${cls}`}
+      className={`w-14 shrink-0 rounded-md px-1.5 py-0.5 text-center text-[10px] font-semibold ${
+        on ? 'bg-amber/15 text-amber' : 'bg-white/5 text-faint'
+      }`}
     >
-      {label}
+      {on ? 'ON' : 'OFF'}
     </span>
   )
 }
