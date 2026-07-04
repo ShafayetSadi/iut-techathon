@@ -114,6 +114,10 @@ The bot uses prefix commands by default:
 - `!usage`: total power right now and today's estimated kWh.
 - `!ask <question>`: free-form office question answered from the current backend snapshot.
 
+The demo server uses two channels: `#iut-hackathon` for regular chat and bot commands, and
+`#alert-channel` for the proactive alert posts (set its channel ID as `ALERT_CHANNEL_ID`).
+Join the demo server here: https://discord.gg/Cx7rW7Ras
+
 To enable it, edit `backend/.env` before starting the backend:
 
 ```env
