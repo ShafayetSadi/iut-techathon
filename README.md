@@ -41,7 +41,7 @@ and a representative hardware schematic.
   and Discord bot.
 
 ## Live Dashboard
-[Live Dashboard UI](docs/ui.jpg)
+![Live Dashboard UI](docs/ui.jpg)
 
 ## Architecture
 
