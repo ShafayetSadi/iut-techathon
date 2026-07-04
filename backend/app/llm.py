@@ -12,6 +12,7 @@ import logging
 
 import httpx
 
+from .clock import local_label
 from .config import settings
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,9 @@ SYSTEM_PROMPT = (
     "\"Drawing Room: 1 fan ON, 2 lights ON\" (or \"all off\"); count devices from the JSON where "
     "type is 'fan'/'light' and status is 'on'. When asked about usage, state total power in watts "
     "and today's estimated energy in kWh, e.g. \"Total power right now: 740W. Today's estimated "
-    "usage: 4.2 kWh.\" If a value isn't in the data, say you don't have it."
+    "usage: 4.2 kWh.\" Mention the current office-local time (given as 'Current local time' in the "
+    "user message) when it's relevant, especially for anything after office hours (9 AM-5 PM). "
+    "If a value isn't in the data, say you don't have it."
 )
 
 # Keep this comfortably below the bot's per-command timeout so a slow model degrades to the
@@ -72,8 +75,9 @@ def template_fallback(question: str, snapshot: dict) -> str:
     today_kwh = summary.get("today_kwh", 0)
     alerts = snapshot.get("alerts", [])
 
+    time_label = local_label(snapshot.get("server_time"))
     breakdown = _per_room_breakdown(snapshot)
-    parts = []
+    parts = [f"As of {time_label} —"]
     if breakdown:
         parts.append(". ".join(breakdown) + ".")
     parts.append(
@@ -92,7 +96,8 @@ async def humanize(question: str, snapshot: dict) -> str:
         return template_fallback(question, snapshot)
 
     user_content = (
-        f"Question: {question}\n\n"
+        f"Question: {question}\n"
+        f"Current local time: {local_label(snapshot.get('server_time'))} (Asia/Dhaka).\n\n"
         f"Live office data (JSON):\n{json.dumps(snapshot, ensure_ascii=False)}"
     )
     payload = {

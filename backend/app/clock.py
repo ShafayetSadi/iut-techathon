@@ -24,6 +24,15 @@ def set_override(iso: str | None) -> None:
     _override_now = parsed.astimezone(UTC)
 
 
+def local_label(iso: str | None = None) -> str:
+    """Human-friendly office-local time, e.g. '10:00 PM'. Defaults to the current (demo) time."""
+    if iso is None:
+        moment = utc_now()
+    else:
+        moment = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+    return moment.astimezone(BUSINESS_TZ).strftime("%I:%M %p").lstrip("0")
+
+
 def clock_state() -> dict:
     now = utc_now()
     return {
