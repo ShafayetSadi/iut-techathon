@@ -2,7 +2,6 @@ import {
   ShieldCheck,
   Clock,
   MoonStar,
-  PlugZap,
   TriangleAlert,
 } from 'lucide-react'
 import type { Alert, AlertType } from '../../types/dashboard'
@@ -20,7 +19,6 @@ const META: Record<
 > = {
   after_hours: { label: 'After hours', icon: MoonStar, tone: 'warn' },
   long_on: { label: 'Left on too long', icon: Clock, tone: 'warn' },
-  controller_offline: { label: 'Controller offline', icon: PlugZap, tone: 'crit' },
 }
 
 export function AlertsPanel({ alerts }: Props) {

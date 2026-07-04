@@ -5,12 +5,11 @@
  */
 
 export type RoomId = 'drawing' | 'work1' | 'work2'
-export type DeviceType = 'fan' | 'light' | 'controller'
+export type DeviceType = 'fan' | 'light'
 
-/** Fans/lights use on|off; controllers use online|offline. */
-export type DeviceStatus = 'on' | 'off' | 'online' | 'offline'
+export type DeviceStatus = 'on' | 'off'
 
-export type AlertType = 'after_hours' | 'long_on' | 'controller_offline'
+export type AlertType = 'after_hours' | 'long_on'
 
 export interface Device {
   id: string
@@ -28,7 +27,6 @@ export interface RoomSummary {
   display_name: string
   power_w: number
   loads_on: number
-  controllers_online: number
   device_count: number
 }
 
@@ -37,7 +35,6 @@ export interface Summary {
   per_room: Record<RoomId, RoomSummary>
   today_kwh: number
   load_count_on: number
-  controllers_online: number
   device_count: number
   server_time: string
 }

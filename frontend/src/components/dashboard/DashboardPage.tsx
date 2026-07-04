@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Fan, Lightbulb, Cpu, X, Power } from 'lucide-react'
+import { Fan, Lightbulb, X, Power } from 'lucide-react'
 import { useDashboardSocket } from '../../hooks/useDashboardSocket'
 import { api } from '../../lib/api'
 import { deriveSummary, formatRelative, formatTimestamp, formatWatts } from '../../lib/format'
@@ -149,8 +149,7 @@ function DeviceModal({
 }) {
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
-  const isController = device.type === 'controller'
-  const active = device.status === 'on' || device.status === 'online'
+  const active = device.status === 'on'
 
   const toggle = async () => {
     setBusy(true)
@@ -162,7 +161,7 @@ function DeviceModal({
     if (ok) onClose()
   }
 
-  const Icon = isController ? Cpu : device.type === 'fan' ? Fan : Lightbulb
+  const Icon = device.type === 'fan' ? Fan : Lightbulb
 
   return (
     <div
@@ -236,7 +235,7 @@ function DeviceModal({
           className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-cyan/30 bg-cyan/10 py-2.5 text-sm font-medium text-cyan transition hover:bg-cyan/20 disabled:opacity-50"
         >
           <Power className="h-4 w-4" />
-          {busy ? 'Sending…' : `Toggle ${isController ? 'controller' : device.type}`}
+          {busy ? 'Sending…' : `Toggle ${device.type}`}
         </button>
         {failed && (
           <p className="mt-2 text-center text-xs text-warn">

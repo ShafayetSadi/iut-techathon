@@ -12,6 +12,8 @@ The single hard rule of the challenge: the dashboard and the Discord bot must **
 We enforce this by giving the system exactly one place where device state lives — the **SQLite
 database** — and making every other component a _reader_ of it.
 
+The submitted high-level non-Mermaid diagram is in [`system-diagram.svg`](./system-diagram.svg).
+
 ```text
                  ┌──────────────────────────────────────────────┐
                  │                 BACKEND (FastAPI)             │

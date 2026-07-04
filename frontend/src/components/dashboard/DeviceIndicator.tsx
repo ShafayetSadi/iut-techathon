@@ -1,4 +1,4 @@
-import { Fan, Lightbulb, Cpu } from 'lucide-react'
+import { Fan, Lightbulb } from 'lucide-react'
 import type { Device } from '../../types/dashboard'
 import { formatRelative, formatWatts } from '../../lib/format'
 
@@ -12,20 +12,11 @@ interface Props {
  * backend `status`:
  *  - light on  → warm amber glow
  *  - fan on    → icon spins
- *  - controller online/offline → cyan / red chip
  * Off/inactive devices are muted slate. A hover card exposes the details.
  */
 export function DeviceIndicator({ device, onSelect }: Props) {
   const on = device.status === 'on'
-  const online = device.status === 'online'
-  const statusLabel =
-    device.type === 'controller'
-      ? online
-        ? 'Online'
-        : 'Offline'
-      : on
-        ? 'ON'
-        : 'OFF'
+  const statusLabel = on ? 'ON' : 'OFF'
 
   return (
     <button
@@ -38,10 +29,10 @@ export function DeviceIndicator({ device, onSelect }: Props) {
       {renderIcon(device)}
       <span
         className={`text-[10px] font-medium leading-none ${
-          on || online ? 'text-ink' : 'text-faint'
+          on ? 'text-ink' : 'text-faint'
         }`}
       >
-        {device.label.replace('Controller', 'Ctrl')}
+        {device.label}
       </span>
 
       {/* Hover / focus detail card */}
@@ -100,28 +91,9 @@ function renderIcon(device: Device) {
       </span>
     )
   }
-
-  // controller
-  const online = device.status === 'online'
-  return (
-    <span className="relative grid h-9 w-9 place-items-center">
-      <span
-        className={`absolute right-1 top-1 h-2 w-2 rounded-full ${
-          online ? 'bg-good' : 'bg-crit animate-warn'
-        }`}
-        aria-hidden
-      />
-      <Cpu
-        className={`h-7 w-7 ${online ? 'text-cyan' : 'text-crit'}`}
-        strokeWidth={1.75}
-      />
-    </span>
-  )
+  return null
 }
 
 function statusColor(device: Device): string {
-  if (device.type === 'controller') {
-    return device.status === 'online' ? 'text-good' : 'text-crit'
-  }
   return device.status === 'on' ? 'text-amber' : 'text-faint'
 }

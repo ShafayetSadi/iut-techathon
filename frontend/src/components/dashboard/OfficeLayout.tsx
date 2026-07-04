@@ -12,8 +12,8 @@ interface Props {
 
 /**
  * Top-view floor plan — the visual centerpiece. Three connected rooms, each
- * holding its 2 fans, 3 lights and 1 controller, over an abstract furniture
- * hint. Device visuals are driven entirely by backend status.
+ * holding its 2 fans and 3 lights, over an abstract furniture hint. Device
+ * visuals are driven entirely by backend status.
  */
 export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props) {
   const byRoom = groupByRoom(devices)
@@ -27,7 +27,7 @@ export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props)
           </h2>
           <p className="text-xs text-muted">Top-view live device map</p>
         </div>
-        <span className="text-xs text-faint">3 rooms · 18 devices</span>
+        <span className="text-xs text-faint">3 rooms · 15 devices</span>
       </header>
 
       <div className="grid flex-1 gap-3 md:grid-cols-3">
@@ -36,19 +36,15 @@ export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props)
           const roomSummary = summary.per_room[room]
           const fans = roomDevices.filter((d) => d.type === 'fan')
           const lights = roomDevices.filter((d) => d.type === 'light')
-          const controller = roomDevices.find((d) => d.type === 'controller')
-          const controllerOffline = controller?.status === 'offline'
           const isBusiest = busiestRoom === room && (roomSummary?.power_w ?? 0) > 0
 
           return (
             <div
               key={room}
               className={`relative overflow-hidden rounded-xl border p-3 transition ${
-                controllerOffline
-                  ? 'border-crit/40 bg-crit/5'
-                  : isBusiest
-                    ? 'border-amber/30 bg-amber/[0.04]'
-                    : 'border-hairline bg-white/[0.02]'
+                isBusiest
+                  ? 'border-amber/30 bg-amber/[0.04]'
+                  : 'border-hairline bg-white/[0.02]'
               }`}
             >
               {/* Furniture hint sits behind the devices */}
@@ -65,18 +61,10 @@ export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props)
                   </p>
                 </div>
                 <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                    controllerOffline
-                      ? 'bg-crit/15 text-crit'
-                      : 'bg-good/15 text-good'
-                  }`}
+                  className="inline-flex items-center gap-1 rounded-full bg-good/15 px-2 py-0.5 text-[10px] font-medium text-good"
                 >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      controllerOffline ? 'bg-crit' : 'bg-good'
-                    }`}
-                  />
-                  {controllerOffline ? 'Offline' : 'Online'}
+                  <span className="h-1.5 w-1.5 rounded-full bg-good" />
+                  Live
                 </span>
               </div>
 
@@ -87,12 +75,9 @@ export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props)
                 {lights.map((d) => (
                   <DeviceIndicator key={d.id} device={d} onSelect={onSelect} />
                 ))}
-                {controller && (
-                  <DeviceIndicator device={controller} onSelect={onSelect} />
-                )}
               </div>
 
-              {isBusiest && !controllerOffline && (
+              {isBusiest && (
                 <span className="relative mt-3 inline-block rounded-md bg-amber/10 px-2 py-0.5 text-[10px] font-medium text-amber">
                   Highest usage
                 </span>

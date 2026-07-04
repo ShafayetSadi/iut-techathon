@@ -1,4 +1,4 @@
-import { Fan, Lightbulb, Cpu } from 'lucide-react'
+import { Fan, Lightbulb } from 'lucide-react'
 import type { Device, RoomId, RoomSummary } from '../../types/dashboard'
 import { formatRoomName } from '../../lib/room'
 import { formatRelative, formatWatts } from '../../lib/format'
@@ -10,12 +10,8 @@ interface Props {
   onSelect?: (device: Device) => void
 }
 
-/** Scannable per-room card listing all six devices with status + power. */
+/** Scannable per-room card listing all five devices with status + power. */
 export function RoomDevicePanel({ room, devices, summary, onSelect }: Props) {
-  const controllerOffline = devices.some(
-    (d) => d.type === 'controller' && d.status === 'offline',
-  )
-
   return (
     <section className="flex flex-col rounded-2xl border border-hairline bg-surface p-4 backdrop-blur">
       <header className="flex items-start justify-between">
@@ -27,17 +23,9 @@ export function RoomDevicePanel({ room, devices, summary, onSelect }: Props) {
             {formatWatts(summary?.power_w ?? 0)} · {summary?.loads_on ?? 0}/5 on
           </p>
         </div>
-        <span
-          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-            controllerOffline ? 'bg-crit/15 text-crit' : 'bg-good/15 text-good'
-          }`}
-        >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              controllerOffline ? 'bg-crit' : 'bg-good'
-            }`}
-          />
-          Controller {controllerOffline ? 'offline' : 'online'}
+        <span className="inline-flex items-center gap-1 rounded-full bg-good/15 px-2 py-0.5 text-[10px] font-medium text-good">
+          <span className="h-1.5 w-1.5 rounded-full bg-good" />
+          Live data
         </span>
       </header>
 
@@ -58,8 +46,6 @@ function DeviceRow({
   onSelect?: (device: Device) => void
 }) {
   const on = device.status === 'on'
-  const online = device.status === 'online'
-  const active = on || online
 
   return (
     <li>
@@ -72,19 +58,15 @@ function DeviceRow({
         <span className="min-w-0 flex-1 truncate whitespace-nowrap text-sm text-ink">
           {device.label}
         </span>
-        {device.type !== 'controller' ? (
-          <span
-            className={`tnum w-12 shrink-0 text-right text-xs ${on ? 'text-ink' : 'text-faint'}`}
-          >
-            {formatWatts(device.power_w)}
-          </span>
-        ) : (
-          <span className="w-12 shrink-0" aria-hidden />
-        )}
+        <span
+          className={`tnum w-12 shrink-0 text-right text-xs ${on ? 'text-ink' : 'text-faint'}`}
+        >
+          {formatWatts(device.power_w)}
+        </span>
         <span className="hidden w-16 shrink-0 text-right text-[11px] text-faint sm:block">
           {formatRelative(device.last_changed)}
         </span>
-        <StatusBadge device={device} active={active} />
+        <StatusBadge active={on} />
       </button>
     </li>
   )
@@ -92,7 +74,6 @@ function DeviceRow({
 
 function RowIcon({ device }: { device: Device }) {
   const on = device.status === 'on'
-  const online = device.status === 'online'
   if (device.type === 'fan') {
     return (
       <Fan
@@ -108,29 +89,12 @@ function RowIcon({ device }: { device: Device }) {
       />
     )
   }
-  return (
-    <Cpu className={`h-4 w-4 shrink-0 ${online ? 'text-cyan' : 'text-crit'}`} />
-  )
+  return null
 }
 
-function StatusBadge({ device, active }: { device: Device; active: boolean }) {
-  const label =
-    device.type === 'controller'
-      ? active
-        ? 'ONLINE'
-        : 'OFFLINE'
-      : active
-        ? 'ON'
-        : 'OFF'
-
-  const cls =
-    device.type === 'controller'
-      ? active
-        ? 'bg-good/15 text-good'
-        : 'bg-crit/15 text-crit'
-      : active
-        ? 'bg-amber/15 text-amber'
-        : 'bg-white/5 text-faint'
+function StatusBadge({ active }: { active: boolean }) {
+  const label = active ? 'ON' : 'OFF'
+  const cls = active ? 'bg-amber/15 text-amber' : 'bg-white/5 text-faint'
 
   return (
     <span
