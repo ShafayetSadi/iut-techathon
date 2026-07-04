@@ -8,16 +8,28 @@ interface Props {
   devices: Device[]
   summary?: RoomSummary
   onSelect?: (device: Device) => void
+  onOpenRoom?: (room: RoomId) => void
 }
 
 /** Scannable per-room card listing all five loads with status + power. */
-export function RoomDevicePanel({ room, devices, summary, onSelect }: Props) {
+export function RoomDevicePanel({
+  room,
+  devices,
+  summary,
+  onSelect,
+  onOpenRoom,
+}: Props) {
   const loadsOn = summary?.loads_on ?? 0
 
   return (
     <section className="flex flex-col rounded-2xl border border-hairline bg-surface p-4 backdrop-blur">
       <header className="flex items-start justify-between">
-        <div>
+        <button
+          type="button"
+          onClick={() => onOpenRoom?.(room)}
+          className="rounded-lg text-left outline-none transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan/50"
+          title={`Open ${formatRoomName(room)} details`}
+        >
           <h3 className="text-sm font-semibold text-ink">
             {formatRoomName(room)}
           </h3>
@@ -25,7 +37,7 @@ export function RoomDevicePanel({ room, devices, summary, onSelect }: Props) {
             {formatWatts(summary?.power_w ?? 0)} · {loadsOn}/
             {summary?.device_count ?? devices.length} on
           </p>
-        </div>
+        </button>
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
             loadsOn > 0 ? 'bg-amber/15 text-amber' : 'bg-white/5 text-faint'

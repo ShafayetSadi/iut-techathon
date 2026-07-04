@@ -47,7 +47,20 @@
       "Bash(python3 -c \"import sys,json; s=json.load\\(sys.stdin\\); print\\('top keys',list\\(s.keys\\(\\)\\)\\); print\\('room keys',list\\(s['per_room']['drawing'].keys\\(\\)\\)\\)\")",
       "Bash(python3 -c \"import sys,json; print\\(sorted\\(set\\(a['type'] for a in json.load\\(sys.stdin\\)['alerts']\\)\\)\\)\")",
       "Bash(nohup .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000)",
-      "Bash(python3 -c \"import sys,json; s=json.load\\(sys.stdin\\); print\\('top',list\\(s.keys\\(\\)\\)\\); print\\('room',list\\(s['per_room']['drawing'].keys\\(\\)\\)\\)\")"
+      "Bash(python3 -c \"import sys,json; s=json.load\\(sys.stdin\\); print\\('top',list\\(s.keys\\(\\)\\)\\); print\\('room',list\\(s['per_room']['drawing'].keys\\(\\)\\)\\)\")",
+      "Bash(curl -s http://127.0.0.1:8000/health)",
+      "Bash(curl -s http://127.0.0.1:8000/api/history?minutes=5)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(python3 -c \"import datetime; d=datetime.datetime.utcnow\\(\\).replace\\(hour=16,minute=0,second=0,microsecond=0\\); print\\(d.strftime\\('%Y-%m-%dT%H:%M:%S.000Z'\\)\\)\")",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/demo/clock -H 'Content-Type: application/json' -d '{\"iso\":\"__TRACKED_VAR__\"}')",
+      "Bash(python3 -c \"import sys,json; print\\('override_active',json.load\\(sys.stdin\\)['clock']['override_active']\\)\")",
+      "Bash(node drive.mjs)",
+      "Bash(curl -s http://127.0.0.1:9222/json/version)",
+      "Bash(python3 -c \"import sys,json; print\\('CDP up:', json.load\\(sys.stdin\\)['Browser']\\)\")",
+      "Bash(pkill -f \"remote-debugging-port=9222\")",
+      "Bash(google-chrome --headless=new --disable-gpu --no-sandbox --remote-debugging-port=9222 about:blank)",
+      "Bash(curl -sf http://127.0.0.1:9222/json/version)",
+      "Bash(break)"
     ]
   }
 }

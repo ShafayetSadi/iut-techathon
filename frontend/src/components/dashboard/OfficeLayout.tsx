@@ -8,6 +8,7 @@ interface Props {
   summary: Summary
   busiestRoom: RoomId | null
   onSelect?: (device: Device) => void
+  onSelectRoom?: (room: RoomId) => void
 }
 
 /**
@@ -15,7 +16,13 @@ interface Props {
  * holding its 2 fans and 3 lights, over an abstract furniture hint. Device
  * visuals are driven entirely by backend status.
  */
-export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props) {
+export function OfficeLayout({
+  devices,
+  summary,
+  busiestRoom,
+  onSelect,
+  onSelectRoom,
+}: Props) {
   const byRoom = groupByRoom(devices)
 
   return (
@@ -54,7 +61,12 @@ export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props)
               <Furniture room={room} />
 
               <div className="relative flex items-start justify-between">
-                <div>
+                <button
+                  type="button"
+                  onClick={() => onSelectRoom?.(room)}
+                  className="rounded-lg text-left outline-none transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan/50"
+                  title={`Open ${formatRoomName(room)} details`}
+                >
                   <h3 className="text-sm font-semibold text-ink">
                     {formatRoomName(room)}
                   </h3>
@@ -63,7 +75,7 @@ export function OfficeLayout({ devices, summary, busiestRoom, onSelect }: Props)
                     {roomSummary?.loads_on ?? 0}/{roomSummary?.device_count ?? 0}{' '}
                     on
                   </p>
-                </div>
+                </button>
                 <span
                   className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
                     loadsOn > 0
