@@ -25,8 +25,17 @@ class Settings:
     bot_command_prefix: str = os.getenv("BOT_COMMAND_PREFIX", "!")
     api_base: str = os.getenv("API_BASE", "http://localhost:8000")
     openrouter_api_key: str = os.getenv("OPENROUTER_API_KEY", "")
-    openrouter_model: str = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-exp")
+    openrouter_model: str = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
     openrouter_base_url: str = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+
+    # Proactive alert posting (bonus). Leave ALERT_CHANNEL_ID empty to disable.
+    alert_channel_id: int | None = (
+        int(os.environ["ALERT_CHANNEL_ID"]) if os.getenv("ALERT_CHANNEL_ID") else None
+    )
+    alert_poll_seconds: int = int(os.getenv("ALERT_POLL_SECONDS", "15"))
+    # Minimum gap before the same room/condition is re-announced (default 1 hour), so a flapping
+    # device can't spam the channel every poll.
+    alert_cooldown_seconds: int = int(os.getenv("ALERT_COOLDOWN_SECONDS", "3600"))
 
     @property
     def sqlite_path(self) -> str:

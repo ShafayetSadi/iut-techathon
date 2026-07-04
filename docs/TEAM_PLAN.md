@@ -36,8 +36,8 @@ video) in addition to being the glue.
   (WebSocket), alerts engine. _Critical path — unblocks everyone._
 - **Arif — Frontend.** React dashboard: device panel, power meter, alerts panel, animated office
   layout. Consumes Saima's API + WebSocket.
-- **Jifat — AI + Discord bot.** `discord.py` bot, LLM (Claude) for humanized replies, proactive
-  alert posting. Consumes Saima's API.
+- **Jifat — AI + Discord bot.** `discord.py` bot, OpenRouter/template humanized replies,
+  proactive alert posting. Consumes the backend snapshot/chat path.
 - **Sadi — Circuit + Diagrams + Integration.** Wokwi ESP32 circuit, system diagram, repo scaffold,
   README, demo video, and keeping the shared API contract honest across the team.
 
@@ -110,21 +110,23 @@ _Deliver a stub of `/api/devices` + `/ws` within the first day so Arif and Jifat
    bonus points live — prioritize after the 3 required panels work.
 6. Keep it clean and usable; responsive is a plus.
 
-### Jifat — AI + Discord bot (`/bot`, discord.py)
+### Jifat — AI + Discord bot (`backend/app/discord.py`, discord.py)
 
-1. **Bot scaffold** — a bot in a test Discord server; reads live data by calling Saima's REST API
-   (never its own copy of state).
+1. **Bot scaffold** — a bot in a test Discord server; runs from the backend FastAPI lifespan and
+   reads live data through the backend snapshot/chat path (never its own copy of state).
 2. **Commands** (names our choice — slash commands or `!` prefix):
    - `!status` → summary of all 3 rooms.
    - `!room <name>` → one room's status.
    - `!usage` → total power now + today's estimated kWh.
-3. **LLM humanization (Claude, strongly encouraged & worth points)** — feed the _real_ fetched
-   data into a Claude prompt to produce friendly, conversational replies (not raw data dumps, not
-   hardcoded/random). Use `claude-haiku-4-5` for speed/cost; keep the API key in `.env`.
+3. **LLM humanization (strongly encouraged & worth points)** — feed the _real_ backend snapshot
+   into the LLM prompt to produce friendly, conversational replies (not raw data dumps, not
+   hardcoded/random). Current implementation uses OpenRouter with a template fallback; keep the API
+   key in `backend/.env`.
 4. **Proactive alerts (BONUS)** — poll `/api/alerts` (or subscribe to WS); when a new alert
    appears, post to a designated channel, e.g. "⚠️ Work Room 2 still has 2 fans and 3 lights ON
    and it's 10 PM. Did someone forget to leave?"
-5. Consult the Anthropic API docs for correct model IDs/params before writing the LLM calls.
+5. If changing providers/models, verify the provider's current model IDs/params before editing the
+   LLM calls.
 
 ### Sadi — Circuit + Diagrams + Integration (`/docs`, `/hardware`)
 
@@ -137,8 +139,9 @@ _Deliver a stub of `/api/devices` + `/ws` within the first day so Arif and Jifat
 2. **System diagram (NOT Mermaid)** — use Excalidraw / draw.io / Figma. Show the full flow:
    `devices → simulated data → backend → (WebSocket) → dashboard  &&  (REST) → Discord bot → user`.
    Export PNG/SVG into `/docs`.
-3. **Repo scaffold & README** — set up `/backend /frontend /bot /docs /hardware`, write the README
-   with per-component setup/run steps, architecture overview, and embed both diagrams.
+3. **Repo scaffold & README** — set up `/backend /frontend /docs /hardware`, document the
+   in-process backend bot, write the README with per-component setup/run steps, architecture
+   overview, and embed both diagrams.
 4. **Integration & demo** — mid-week, verify all three components read consistent data; record the
    ≤3-min video (dashboard live-updating, bot answering, one alert firing) and narrate the data
    flow.

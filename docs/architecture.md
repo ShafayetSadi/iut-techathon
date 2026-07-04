@@ -53,9 +53,9 @@ Flow in one line: **Simulator → SQLite → API → (WebSocket) Web UI && (REST
 
 | Component                  | Owns                                                                                                                                                        | Never does                                                                    |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| **Backend** (`/backend`)   | Simulating device state, persisting it, computing power totals + `kWh`, running the alerts engine, exposing REST + WebSocket. **The only writer of state.** | Rendering UI; talking to Discord; calling the LLM.                            |
+| **Backend** (`/backend`)   | Simulating device state, persisting it, computing power totals + `kWh`, running the alerts engine, exposing REST + WebSocket, and hosting the Discord bot. **The only writer of state.** | Rendering the browser UI; inventing data outside the backend snapshot.        |
 | **Frontend** (`/frontend`) | Rendering live panels, trend chart, animated office layout. Reads via WebSocket (with REST fallback).                                                       | Computing alerts or power itself — it only _displays_ what the backend sends. |
-| **Bot** (`/bot`)           | Answering Discord commands, humanizing answers via LLM, proactively posting new alerts. Reads via REST.                                                     | Holding its own copy of device state; inventing data.                         |
+| **Bot** (`backend/app/discord.py`) | Answering Discord commands, humanizing answers via LLM, proactively posting new alerts. Reads through the backend chat/snapshot path and alert REST endpoint. | Holding its own copy of device state; inventing data.                         |
 | **Hardware** (`/hardware`) | Wokwi ESP32 schematic proving the sensing concept for one room.                                                                                             | Feeding the running app (it's a concept/simulation only).                     |
 
 **Boundary rule:** power math and alert logic live **only** in the backend. If the bot or
@@ -69,13 +69,13 @@ sync.
 | Layer             | Choice                                | Why                                                                                                                  |
 | ----------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | Backend framework | **FastAPI** (Python)                  | Async, native WebSocket support, auto OpenAPI docs at `/docs`, minimal boilerplate.                                  |
-| Persistence       | **SQLite** + **SQLAlchemy**           | Zero-config file DB = single source of truth; SQLAlchemy gives clean models + easy migration to Postgres if we host. |
+| Persistence       | **SQLite** via Python `sqlite3`       | Zero-config file DB = single source of truth and simple enough for the prelim demo.                                  |
 | Background work   | FastAPI `lifespan` + `asyncio` task   | The simulator tick loop runs in-process; no extra worker/broker needed.                                              |
 | Frontend          | **React + Vite + TypeScript**         | Fast dev server, typed API contract, easy Vercel deploy.                                                             |
 | Charts            | **Recharts**                          | Simple declarative line chart for the power trend.                                                                   |
 | Bot               | **discord.py**                        | Mature, supports both slash and prefix commands, easy `tasks.loop` for the alert poller.                             |
-| LLM               | **Anthropic SDK**, `claude-haiku-4-5` | Fast + cheap for conversational humanizing of real data.                                                             |
-| HTTP client (bot) | **httpx**                             | Async calls to the backend REST API.                                                                                 |
+| LLM               | **OpenRouter** via `httpx`            | Optional conversational humanizing of real data, with a deterministic template fallback.                             |
+| HTTP client (bot) | **httpx**                             | Async calls to the backend chat and alert endpoints.                                                                 |
 
 > All choices are free-tier friendly and deployable. See §14 for hosting.
 
@@ -88,19 +88,22 @@ iut-techathon/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py            # FastAPI app, lifespan starts the tick loop
-│   │   ├── db.py              # SQLAlchemy engine/session, init + seed
-│   │   ├── models.py          # Device, StateEvent ORM models
+│   │   ├── db.py              # sqlite3 schema, init + seed
 │   │   ├── schemas.py         # Pydantic response models (the API contract)
 │   │   ├── simulator.py       # tick loop: flips devices, writes DB, logs history
 │   │   ├── power.py           # totals, per-room, today's kWh
 │   │   ├── alerts.py          # alerts engine (after-hours, long-on-room)
 │   │   ├── clock.py           # now() with demo override (fake "10 PM")
+│   │   ├── discord.py         # in-process Discord commands + proactive alert poller
+│   │   ├── llm.py             # OpenRouter humanization + template fallback
 │   │   ├── ws.py              # WebSocket connection manager + broadcast
 │   │   └── routers/
 │   │       ├── devices.py     # /api/devices, /api/rooms, /api/devices/{id}/toggle
 │   │       ├── summary.py     # /api/summary, /api/history
-│   │       └── alerts.py      # /api/alerts
-│   ├── requirements.txt
+│   │       ├── alerts.py      # /api/alerts
+│   │       └── chat.py        # /api/chat
+│   ├── pyproject.toml
+│   ├── uv.lock
 │   └── .env.example
 ├── frontend/
 │   ├── src/
@@ -114,12 +117,6 @@ iut-techathon/
 │   │   │   └── OfficeLayout.tsx    # animated SVG floor plan
 │   │   └── App.tsx
 │   ├── package.json
-│   └── .env.example
-├── bot/
-│   ├── bot.py                # command handlers + alert poller
-│   ├── backend_client.py     # httpx calls to the API
-│   ├── llm.py                # Claude humanization
-│   ├── requirements.txt
 │   └── .env.example
 ├── hardware/
 │   └── wokwi/                # diagram.json, sketch.ino, screenshot, share link
@@ -190,6 +187,7 @@ Layered, single-process. The tick loop is the heartbeat.
 FastAPI lifespan (startup)
    └─ init_db() → create tables, seed 15 devices if empty
    └─ launch asyncio task: simulator_loop()
+   └─ launch Discord bot task if DISCORD_TOKEN is configured
 
 simulator_loop()  ── every TICK_SECONDS (default 3s) ──▶
    1. maybe_flip_devices()   # flip a *few* random devices, update last_changed
@@ -213,6 +211,10 @@ Key modules:
   effects; both the tick loop and REST handlers call these.
 - **`ws.py`** — `ConnectionManager` holding a set of live sockets; `broadcast()` serializes the
   snapshot once and sends to all, dropping dead connections.
+- **`discord.py`** — optional in-process Discord gateway client; commands call `/api/chat` and
+  the alert poller calls `/api/alerts`.
+- **`llm.py`** — OpenRouter call with a hard timeout and a template fallback that answers from the
+  same snapshot JSON.
 
 ---
 
@@ -355,18 +357,21 @@ App
 ## 10. Discord Bot Architecture
 
 ```text
-bot.py
-├── on_ready → start alert_poller (tasks.loop, every 15s)
-├── command: status  → backend_client.get_summary() + get_devices() → llm.humanize() → reply
-├── command: room <name> → backend_client.get_room(name) → llm.humanize() → reply
-├── command: usage  → backend_client.get_summary() → llm.humanize() → reply
-└── alert_poller → backend_client.get_alerts() → for each NEW id → post to ALERT_CHANNEL_ID
+backend/app/discord.py
+├── FastAPI lifespan → start bot if DISCORD_TOKEN exists
+├── on_ready → start alert_poller (tasks.loop, every 15s by default)
+├── command: status  → POST /api/chat → build_snapshot() → llm.humanize() → reply
+├── command: room <name> → POST /api/chat with canonical room prompt → reply
+├── command: usage  → POST /api/chat → live summary values → reply
+├── command: ask <question> → POST /api/chat → reply
+└── alert_poller → GET /api/alerts → for each NEW id → post to ALERT_CHANNEL_ID
 ```
 
-- **`backend_client.py`** — thin async httpx wrapper over the REST API. The bot holds **no** device
-  state; it always fetches fresh. This is why the bot and dashboard can never disagree.
-- **Commands** support both `!status` prefix and `/status` slash form (pick one for the demo; keep
-  both wired if cheap).
+- **Commands** use the configured prefix (`!` by default). The bot holds **no** device state; it
+  asks the backend for the current snapshot every time. This is why the bot and dashboard can never
+  disagree.
+- **Room aliases** include `drawing`, `drawing room`, `work1`, `work room 1`, `work2`, `work room
+  2`, `w1`, and `w2`.
 - **`alert_poller`** — keeps a `set()` of announced alert ids; posts only ids not seen before, e.g.
   `⚠️ Work Room 2 still has 2 fans and 3 lights ON and it's 10 PM. Did someone forget to leave?`
 
@@ -377,25 +382,26 @@ bot.py
 The bot must give **real answers from real data**, just phrased conversationally — never invent
 numbers.
 
-**Design (`llm.py`):**
+**Design (`backend/app/llm.py`):**
 
-- Model: `claude-haiku-4-5` (fast, cheap, plenty for this).
+- Provider: OpenRouter via `httpx`; default model is
+  `meta-llama/llama-3.3-70b-instruct:free`.
 - **System prompt** fixes persona + hard guardrail: _"You are the office's friendly energy
   assistant. Answer ONLY from the JSON data provided. Never invent devices, rooms, or numbers. Be
   concise and warm. If a value isn't in the data, say you don't have it."_
-- **User content** = the user's question + the freshly-fetched JSON (summary/devices/room) as
-  context.
-- The LLM only _rephrases_ — the truth is always the injected JSON. If the Anthropic call fails,
+- **User content** = the user's question + the freshly-built backend snapshot JSON (`devices`,
+  `summary`, and `alerts`) as context.
+- The LLM only _rephrases_ — the truth is always the injected JSON. If the OpenRouter call fails,
   fall back to a plain templated string built from the same data (so the bot never goes silent).
 
 ```text
-question ─▶ backend_client (fetch real JSON) ─▶ llm.humanize(question, json)
-                                                     │ fail?
-                                                     └─▶ template_fallback(json)
+Discord command ─▶ POST /api/chat ─▶ build_snapshot() ─▶ llm.humanize(question, snapshot)
+                                                             │ fail/no key?
+                                                             └─▶ template_fallback(snapshot)
 ```
 
-> Use the latest Anthropic SDK; the API key lives in `bot/.env` (`ANTHROPIC_API_KEY`), never in
-> git. Confirm exact model id/params against current Anthropic docs before wiring.
+> The API key lives in `backend/.env` as `OPENROUTER_API_KEY`, never in git. If changing providers
+> or model IDs, verify the provider's current docs before editing the call.
 
 ---
 
@@ -411,6 +417,13 @@ Each component ships a `.env.example`. Never commit real secrets.
 | `TICK_SECONDS`                 | `3`                     | `3`                                       | Simulator/broadcast interval |
 | `CORS_ORIGINS`                 | `http://localhost:5173` | `https://<app>.vercel.app`                | Allowed frontend origins     |
 | `OFFICE_OPEN` / `OFFICE_CLOSE` | `09:00` / `17:00`       | same                                      | Office hours for alerts      |
+| `DISCORD_TOKEN`                | empty or real token     | secret                                    | Enables the in-process bot   |
+| `BOT_COMMAND_PREFIX`           | `!`                     | `!`                                       | Prefix commands              |
+| `API_BASE`                     | `http://localhost:8000` | backend public URL                        | Bot calls back to the API    |
+| `ALERT_CHANNEL_ID`             | empty or channel id     | channel id                                | Proactive alert destination  |
+| `ALERT_POLL_SECONDS`           | `15`                    | `15`                                      | Alert poll cadence           |
+| `OPENROUTER_API_KEY`           | empty or secret         | secret                                    | Optional LLM humanization    |
+| `OPENROUTER_MODEL`             | `meta-llama/...:free`   | chosen model                              | OpenRouter model             |
 
 **`frontend/.env`**
 
@@ -419,40 +432,31 @@ Each component ships a `.env.example`. Never commit real secrets.
 | `VITE_API_BASE` | `http://localhost:8000`  | `https://<backend>.onrender.com`  |
 | `VITE_WS_URL`   | `ws://localhost:8000/ws` | `wss://<backend>.onrender.com/ws` |
 
-**`bot/.env`**
-
-| Var                 | Purpose                      |
-| ------------------- | ---------------------------- |
-| `DISCORD_TOKEN`     | Bot token                    |
-| `ALERT_CHANNEL_ID`  | Channel for proactive alerts |
-| `API_BASE`          | Backend base URL             |
-| `ANTHROPIC_API_KEY` | LLM key                      |
-
 ---
 
 ## 13. Deployment Architecture
 
-Three independently-deployed pieces, wired by URLs + CORS.
+Two deployed runtime pieces, wired by URLs + CORS. The Discord bot runs inside the backend process.
 
 ```text
-   Vercel                     Render/Railway                 Always-on host
- ┌──────────┐   HTTPS/WSS   ┌──────────────────┐           ┌──────────────┐
- │ Frontend │ ────────────▶ │  Backend (API +  │ ◀──────── │  Discord Bot │
- │ (static) │               │  WS + SQLite)    │  HTTPS    │  (worker)    │
- └──────────┘               └──────────────────┘           └──────────────┘
-        │                            ▲                             │
-        └─ VITE_API_BASE/WS_URL ─────┘        API_BASE ────────────┘
+   Vercel                     Render/Railway
+ ┌──────────┐   HTTPS/WSS   ┌────────────────────────────┐
+ │ Frontend │ ────────────▶ │  Backend (API + WS +       │
+ │ (static) │               │  SQLite + Discord bot)     │
+ └──────────┘               └────────────────────────────┘
+        │                            │
+        └─ VITE_API_BASE/WS_URL ─────┘
+                                     └─ Discord gateway + alert channel
 ```
 
 - **Backend → Render or Railway** (web service). Exposes HTTPS + WSS. SQLite file lives on the
-  instance disk (add a persistent volume on Render if we want history to survive redeploys; fine
-  without for the demo).
+  instance disk (add a persistent volume if we want history to survive redeploys; fine without for
+  the demo). Set Discord/OpenRouter secrets on the same backend service if the bot should run.
 - **Frontend → Vercel** (static build). Set `VITE_API_BASE` + `VITE_WS_URL` to the backend URL.
-- **Bot → Railway/Render background worker** (or a small VPS). Set `API_BASE` to the backend URL.
 - **CORS:** backend `CORS_ORIGINS` must include the exact Vercel domain. WSS works cross-origin;
   double-check the browser uses `wss://` (not `ws://`) in prod or it will be blocked as mixed
   content.
-- **Secrets** only via each host's env-var settings, never in the repo.
+- **Secrets** only via the host's env-var settings, never in the repo.
 
 For the recorded demo, running all three locally is acceptable too — but a live public dashboard
 URL is a strong flex for judges.
@@ -477,8 +481,9 @@ Both surfaces show the _same_ alert from the _same_ backend computation. ✅ one
 ### B. `!usage` command
 
 ```text
-User: !usage  → bot → GET /api/summary (740W, 4.2 kWh)
-             → llm.humanize(question, summaryJSON)
+User: !usage  → bot → POST /api/chat
+             → backend build_snapshot() includes summary (740W, 4.2 kWh)
+             → llm.humanize(question, snapshotJSON)
              → "Right now the office is pulling about 740W, and you've used ~4.2 kWh today. 💡"
 ```
 
@@ -514,8 +519,8 @@ tick loop flips work1-light-2 OFF → writes DB (last_changed updated)
 | Live device status panel        | `DeviceStatusPanel` via WS (§9)                              |
 | Live power meter + per-room     | `PowerMeter` ← `/api/summary` (§7)                           |
 | Active alerts panel             | `AlertsPanel` ← alerts engine (§8)                           |
-| Discord bot commands            | `bot.py` (§10)                                               |
-| LLM humanized responses         | `llm.py` (§11)                                               |
+| Discord bot commands            | `backend/app/discord.py` (§10)                               |
+| LLM humanized responses         | `backend/app/llm.py` (§11)                                   |
 | Proactive alert posting (bonus) | `alert_poller` (§10)                                         |
 | Animated office layout (bonus)  | `OfficeLayout` (§9)                                          |
 | Shared single backend           | SQLite source of truth (§1–2)                                |

@@ -1,6 +1,6 @@
 from datetime import datetime, time, timedelta
 
-from .clock import BUSINESS_TZ, iso_now, utc_now
+from .clock import BUSINESS_TZ, iso_now, local_label, utc_now
 from .config import settings
 from .constants import LOAD_TYPES, ROOMS
 
@@ -35,7 +35,7 @@ def build_alerts(devices: list[dict]) -> list[dict]:
                     "id": f"after_hours-{room}-{now[:13]}",
                     "type": "after_hours",
                     "room": room,
-                    "message": f"{display_name} has {fans_on} fans and {lights_on} lights ON after office hours.",
+                    "message": f"{display_name} has {fans_on} fans and {lights_on} lights ON at {local_label(now)}, after office hours.",
                     "since": min(device["last_changed"] for device in on_loads),
                     "timestamp": now,
                 }
