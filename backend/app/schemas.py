@@ -89,3 +89,12 @@ class ClockRequest(BaseModel):
 
 class SimulatorRequest(BaseModel):
     running: bool
+
+
+class ChatRequest(BaseModel):
+    message: str
+    user: str | None = None
+
+
+class ChatResponse(BaseModel):
+    reply: str

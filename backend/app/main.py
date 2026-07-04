@@ -5,10 +5,11 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+from . import discord as discord_bot
 from .clock import iso_now
 from .config import settings
 from .db import init_db
-from .routers import alerts, demo, devices, summary
+from .routers import alerts, chat, demo, devices, summary
 from .simulator import simulator_state, start, stop
 from .snapshot import build_snapshot
 from .ws import manager
@@ -18,7 +19,9 @@ from .ws import manager
 async def lifespan(app: FastAPI):
     init_db()
     start()
+    discord_bot.start()
     yield
+    await discord_bot.stop()
     await stop()
 
 
@@ -36,6 +39,7 @@ app.include_router(devices.router)
 app.include_router(summary.router)
 app.include_router(alerts.router)
 app.include_router(demo.router)
+app.include_router(chat.router)
 
 
 @app.exception_handler(HTTPException)
