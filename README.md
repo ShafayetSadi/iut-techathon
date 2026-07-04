@@ -23,7 +23,7 @@ The backend is the only writer of device state and the only place where power to
 and alerts are computed. The dashboard and Discord bot must read from the backend so they never
 disagree.
 
-![High-level system diagram](docs/system-diagram.svg)
+![High-level system architecture diagram](docs/architecture.png)
 
 ## Repository Layout
 
