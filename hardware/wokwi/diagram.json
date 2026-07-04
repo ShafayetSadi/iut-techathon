@@ -1,0 +1,184 @@
+{
+  "version": 1,
+  "author": "Techathon - Lights, Fans, Discord",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": -48,
+      "left": 300,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw_l1",
+      "top": -140,
+      "left": -40,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw_l2",
+      "top": -60,
+      "left": -40,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw_l3",
+      "top": 20,
+      "left": -40,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw_f1",
+      "top": 100,
+      "left": -40,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw_f2",
+      "top": 180,
+      "left": -40,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": -110,
+      "left": 640,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": -50,
+      "left": 640,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r3",
+      "top": 10,
+      "left": 640,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": -120,
+      "left": 760,
+      "attrs": { "color": "yellow" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led2",
+      "top": -60,
+      "left": 760,
+      "attrs": { "color": "yellow" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led3",
+      "top": 0,
+      "left": 760,
+      "attrs": { "color": "yellow" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay1",
+      "top": 150,
+      "left": 560,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay2",
+      "top": 300,
+      "left": 560,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rf1",
+      "top": 160,
+      "left": 820,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "rf2",
+      "top": 310,
+      "left": 820,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "fled1",
+      "top": 188.4,
+      "left": 915.8,
+      "attrs": { "color": "cyan" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "fled2",
+      "top": 332.4,
+      "left": 915.8,
+      "attrs": { "color": "cyan" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot",
+      "top": 400,
+      "left": 260,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    ["sw_l1:2", "esp:D13", "green", []],
+    ["sw_l1:3", "esp:3V3", "red", []],
+    ["sw_l1:1", "esp:GND.1", "black", []],
+    ["sw_l2:2", "esp:D14", "green", []],
+    ["sw_l2:3", "esp:3V3", "red", []],
+    ["sw_l2:1", "esp:GND.1", "black", []],
+    ["sw_l3:2", "esp:D27", "green", []],
+    ["sw_l3:3", "esp:3V3", "red", []],
+    ["sw_l3:1", "esp:GND.1", "black", []],
+    ["sw_f1:2", "esp:D26", "green", []],
+    ["sw_f1:3", "esp:3V3", "red", []],
+    ["sw_f1:1", "esp:GND.1", "black", []],
+    ["sw_f2:2", "esp:D25", "green", []],
+    ["sw_f2:3", "esp:3V3", "red", []],
+    ["sw_f2:1", "esp:GND.1", "black", []],
+    ["esp:D18", "r1:1", "orange", []],
+    ["r1:2", "led1:A", "orange", []],
+    ["led1:C", "esp:GND.2", "black", []],
+    ["esp:D19", "r2:1", "orange", []],
+    ["r2:2", "led2:A", "orange", []],
+    ["led2:C", "esp:GND.2", "black", []],
+    ["esp:D21", "r3:1", "orange", []],
+    ["r3:2", "led3:A", "orange", []],
+    ["led3:C", "esp:GND.2", "black", []],
+    ["esp:D22", "relay1:IN", "blue", []],
+    ["relay1:VCC", "esp:VIN", "red", []],
+    ["relay1:GND", "esp:GND.2", "black", []],
+    ["relay1:COM", "esp:3V3", "red", []],
+    ["relay1:NO", "rf1:1", "cyan", []],
+    ["rf1:2", "fled1:A", "cyan", []],
+    ["fled1:C", "esp:GND.2", "black", []],
+    ["esp:D23", "relay2:IN", "blue", []],
+    ["relay2:VCC", "esp:VIN", "red", []],
+    ["relay2:GND", "esp:GND.2", "black", []],
+    ["relay2:COM", "esp:3V3", "red", []],
+    ["relay2:NO", "rf2:1", "cyan", []],
+    ["rf2:2", "fled2:A", "cyan", []],
+    ["fled2:C", "esp:GND.2", "black", []],
+    ["pot:VCC", "esp:3V3", "red", []],
+    ["pot:GND", "esp:GND.1", "black", []],
+    ["pot:SIG", "esp:VP", "gray", []]
+  ],
+  "dependencies": {}
+}

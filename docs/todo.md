@@ -202,15 +202,15 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 
 ### Hardware Schematic
 
-- [ ] Create one representative-room schematic in Wokwi or Tinkercad.
-- [ ] Include one ESP32/Arduino controller.
-- [ ] Include 2 fan stand-ins.
-- [ ] Include 3 light stand-ins.
-- [ ] Use buttons/switches as device state inputs.
-- [ ] Use LEDs/relay modules as output stand-ins where appropriate.
-- [ ] Add optional current-sense concept if time permits.
-- [ ] Document pin mapping and connection reasoning.
-- [ ] Export screenshot/share link into `docs/` or `hardware/`.
+- [x] Create one representative-room schematic in Wokwi or Tinkercad.
+- [x] Include one ESP32/Arduino controller.
+- [x] Include 2 fan stand-ins.
+- [x] Include 3 light stand-ins.
+- [x] Use buttons/switches as device state inputs.
+- [x] Use LEDs/relay modules as output stand-ins where appropriate.
+- [x] Add optional current-sense concept if time permits.
+- [x] Document pin mapping and connection reasoning.
+- [x] Export screenshot/share link into `docs/` or `hardware/`.
 
 ### Integration
 
@@ -263,5 +263,5 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 - [ ] Alerts are timestamped.
 - [ ] Demo controls can reliably trigger an alert.
 - [ ] System diagram is included in the repo.
-- [ ] Circuit schematic is included in the repo.
+- [x] Circuit schematic is included in the repo.
 - [ ] Final demo video is 3 minutes or less.
