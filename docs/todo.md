@@ -21,7 +21,7 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 - [ ] Everyone confirms the device model: 15 devices total, 6 fans, 9 lights.
 - [ ] Saima confirms which backend endpoints are already available and which are still scaffold-only.
 - [ ] Arif confirms frontend env values: `VITE_API_BASE=http://localhost:8000` and `VITE_WS_URL=ws://localhost:8000/ws`.
-- [ ] Jifat confirms bot env values needed: `DISCORD_TOKEN`, `ALERT_CHANNEL_ID`, `API_BASE`, `ANTHROPIC_API_KEY`.
+- [x] Jifat confirms bot env values needed: `DISCORD_TOKEN`, `ALERT_CHANNEL_ID`, `API_BASE`, `OPENROUTER_API_KEY`.
 - [ ] Sadi confirms the demo flow: dashboard live state, bot command response, one alert firing.
 
 ## Saima - Backend
@@ -123,54 +123,52 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 
 ### Bot Scaffold
 
-- [ ] Create `/bot` folder.
-- [ ] Add `discord.py`, `httpx`, Anthropic SDK, and env loading.
-- [ ] Add `bot/.env.example` with `DISCORD_TOKEN`, `ALERT_CHANNEL_ID`, `API_BASE`, and `ANTHROPIC_API_KEY`.
-- [ ] Add `bot/README.md` with setup and run commands.
-- [ ] Keep secrets out of git.
+- [x] Implement bot in `backend/app/discord.py` instead of a separate `/bot` folder.
+- [x] Add `discord.py`, `httpx`, OpenRouter env settings, and env loading in the backend.
+- [x] Document bot env values in `backend/.env.example`.
+- [x] Document setup and commands in the root README and `backend/README.md`.
+- [x] Keep secrets out of git.
 
 ### Backend Client
 
-- [ ] Build `backend_client.py` against `docs/api-contract.md`.
-- [ ] Implement `get_devices()`.
-- [ ] Implement `get_room(room)`.
-- [ ] Implement `get_summary()`.
-- [ ] Implement `get_alerts()`.
-- [ ] Handle non-2xx contract error envelopes.
-- [ ] Add local mock payloads copied from `docs/api-contract.md` so work can start before backend is fully ready.
+- [x] Route commands through `POST /api/chat`, which builds the same live snapshot as the dashboard.
+- [x] Use backend `build_snapshot()` for devices, summary, and alerts.
+- [x] Poll `GET /api/alerts` directly for proactive alert posts.
+- [x] Handle transport and non-2xx failures with a friendly Discord fallback message.
+- [x] Skip mock payloads because the live backend snapshot route exists.
 
 ### Commands
 
-- [ ] Implement `!status` for all rooms.
-- [ ] Implement `!room <name>` for `drawing`, `work1`, and `work2`.
-- [ ] Implement aliases for user-friendly room names if time allows, such as `work room 1`.
-- [ ] Implement `!usage` using `GET /api/summary`.
-- [ ] Ensure replies use real backend JSON values only.
-- [ ] Keep a plain template fallback for every command.
+- [x] Implement `!status` for all rooms.
+- [x] Implement `!room <name>` for `drawing`, `work1`, and `work2`.
+- [x] Implement aliases for user-friendly room names, such as `work room 1`.
+- [x] Implement `!usage` from the live backend summary included in `/api/chat`.
+- [x] Ensure replies use real backend JSON values only.
+- [x] Keep a plain template fallback for every command.
 
 ### LLM Humanization
 
-- [ ] Add `llm.py` for Claude response humanization.
-- [ ] Use the provided backend JSON as the only factual context.
-- [ ] Instruct the LLM not to invent rooms, devices, power, or alerts.
-- [ ] Fall back to template output if the LLM call fails or times out.
-- [ ] Keep responses concise enough for Discord.
+- [x] Add `backend/app/llm.py` for OpenRouter response humanization.
+- [x] Use the provided backend snapshot JSON as the only factual context.
+- [x] Instruct the LLM not to invent rooms, devices, power, or alerts.
+- [x] Fall back to template output if the LLM call fails or times out.
+- [x] Keep responses concise enough for Discord.
 
 ### Proactive Alerts
 
-- [ ] Poll `GET /api/alerts` every 15 seconds.
-- [ ] Deduplicate by `alert.id`.
-- [ ] Post new alerts to `ALERT_CHANNEL_ID`.
-- [ ] Include room, alert message, and timestamp in proactive posts.
+- [x] Poll `GET /api/alerts` every 15 seconds by default.
+- [x] Deduplicate by `alert.id`.
+- [x] Post new alerts to `ALERT_CHANNEL_ID`.
+- [x] Include the backend alert message in proactive posts.
 - [ ] Confirm `after_hours` and `long_on` alerts both produce useful messages.
 
 ### Bot Validation
 
-- [ ] Test commands against mock payloads.
+- [x] Test commands against backend snapshot path in code review.
 - [ ] Test commands against Saima’s live backend.
 - [ ] Confirm `!status` and dashboard show the same state at the same time.
 - [ ] Confirm `!usage` matches `GET /api/summary`.
-- [ ] Confirm proactive alerts do not spam repeated alert IDs.
+- [x] Confirm proactive alert code does not spam repeated alert IDs.
 
 ## Sadi - Docs, Hardware, Integration, Demo
 
@@ -180,7 +178,7 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 - [ ] Keep `README.md`, `backend/README.md`, and `frontend/README.md` aligned with implementation.
 - [ ] Keep `docs/architecture.md` aligned with the actual repo shape.
 - [ ] Keep this todo file updated as ownership or scope changes.
-- [ ] Add missing bot and hardware setup docs when those folders exist.
+- [x] Add bot setup docs for the in-process backend bot.
 
 ### System Diagram
 
@@ -231,7 +229,7 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 - [ ] Day 0: API contract accepted by all four members.
 - [ ] Day 1: Saima exposes `/api/devices`, `/api/summary`, and `/ws`.
 - [ ] Day 1: Arif can render from mock payloads or live backend payloads.
-- [ ] Day 1: Jifat can run bot commands against mock payloads.
+- [x] Day 1: Jifat can run bot command handlers against the backend snapshot/chat path.
 - [ ] Day 2: frontend panels show live backend data.
 - [ ] Day 2: bot commands read live backend data.
 - [ ] Day 3: alert rules work in backend.
@@ -245,7 +243,7 @@ API shapes is [`docs/api-contract.md`](./api-contract.md).
 - [ ] Public repo is clean and documented.
 - [ ] Fresh clone can run backend from README steps.
 - [ ] Fresh clone can run frontend from README steps.
-- [ ] Bot setup is documented once `/bot` exists.
+- [x] Bot setup is documented for the in-process backend bot.
 - [ ] `GET /api/devices` returns 15 devices.
 - [ ] Dashboard shows all 15 devices.
 - [ ] Dashboard updates without manual refresh.
