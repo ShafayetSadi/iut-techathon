@@ -2,6 +2,7 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+import random
 
 from .clock import BUSINESS_TZ, iso_now, utc_now
 from .config import settings
@@ -59,7 +60,7 @@ def seed_devices(conn: sqlite3.Connection) -> None:
     now = iso_now()
     for room in ROOMS:
         for device_type, number, rated_w in DEVICE_LAYOUT:
-            status = "online" if device_type == "controller" else "off"
+            status = initial_device_status(device_type)
             conn.execute(
                 """
                 INSERT INTO devices (id, type, label, room, status, power_rated_w, last_changed)
@@ -75,6 +76,12 @@ def seed_devices(conn: sqlite3.Connection) -> None:
                     now,
                 ),
             )
+
+
+def initial_device_status(device_type: str) -> str:
+    if device_type == "controller":
+        return random.choices(["online", "offline"], weights=[9, 1], k=1)[0]
+    return random.choice(["on", "off"])
 
 
 def row_to_device(row: sqlite3.Row) -> dict:
