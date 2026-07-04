@@ -51,6 +51,7 @@ def init_db() -> None:
             )
             """
         )
+        _remove_legacy_controllers(conn)
         count = conn.execute("SELECT COUNT(*) FROM devices").fetchone()[0]
         if count == 0:
             seed_devices(conn)
@@ -79,9 +80,11 @@ def seed_devices(conn: sqlite3.Connection) -> None:
 
 
 def initial_device_status(device_type: str) -> str:
-    if device_type == "controller":
-        return random.choices(["online", "offline"], weights=[9, 1], k=1)[0]
     return random.choice(["on", "off"])
+
+
+def _remove_legacy_controllers(conn: sqlite3.Connection) -> None:
+    conn.execute("DELETE FROM devices WHERE type = 'controller'")
 
 
 def row_to_device(row: sqlite3.Row) -> dict:

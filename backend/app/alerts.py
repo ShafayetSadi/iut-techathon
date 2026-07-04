@@ -26,7 +26,6 @@ def build_alerts(devices: list[dict]) -> list[dict]:
         room_devices = [device for device in devices if device["room"] == room]
         loads = [device for device in room_devices if device["type"] in LOAD_TYPES]
         on_loads = [device for device in loads if device["status"] == "on"]
-        controller = next((device for device in room_devices if device["type"] == "controller"), None)
 
         if _is_after_hours() and on_loads:
             fans_on = sum(1 for device in on_loads if device["type"] == "fan")
@@ -55,17 +54,5 @@ def build_alerts(devices: list[dict]) -> list[dict]:
                         "timestamp": now,
                     }
                 )
-
-        if controller and controller["status"] == "offline":
-            alerts.append(
-                {
-                    "id": f"controller_offline-{room}",
-                    "type": "controller_offline",
-                    "room": room,
-                    "message": f"{display_name} controller is offline.",
-                    "since": controller["last_changed"],
-                    "timestamp": now,
-                }
-            )
 
     return alerts

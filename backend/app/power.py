@@ -10,9 +10,6 @@ def room_summary(room: str, devices: list[dict]) -> dict:
         "loads_on": sum(
             1 for device in room_devices if device["type"] in LOAD_TYPES and device["status"] == "on"
         ),
-        "controllers_online": sum(
-            1 for device in room_devices if device["type"] == "controller" and device["status"] == "online"
-        ),
         "device_count": len(room_devices),
     }
 
@@ -24,7 +21,6 @@ def build_summary(devices: list[dict], server_time: str, today_kwh: float) -> di
         "per_room": per_room,
         "today_kwh": today_kwh,
         "load_count_on": sum(summary["loads_on"] for summary in per_room.values()),
-        "controllers_online": sum(summary["controllers_online"] for summary in per_room.values()),
         "device_count": len(devices),
         "server_time": server_time,
     }

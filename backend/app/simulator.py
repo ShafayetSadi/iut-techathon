@@ -35,11 +35,6 @@ def _is_office_hours() -> bool:
 
 
 def _flip_weight(device: dict) -> float:
-    if device["type"] == "controller":
-        if device["status"] == "offline":
-            return 0.4
-        return 0.05
-
     if _is_office_hours():
         return 2.0 if device["status"] == "off" else 0.7
     return 2.0 if device["status"] == "on" else 0.7
@@ -74,12 +69,7 @@ def maybe_flip_devices(rng: random.Random = _rng) -> list[dict]:
             break
 
         remaining = [device for device in remaining if device["id"] != selected["id"]]
-        next_status = {
-            "on": "off",
-            "off": "on",
-            "online": "offline",
-            "offline": "online",
-        }[selected["status"]]
+        next_status = "off" if selected["status"] == "on" else "on"
         updated = set_device_status(selected["id"], next_status)
         if updated is not None:
             flips.append(updated)
