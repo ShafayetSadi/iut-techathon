@@ -60,11 +60,11 @@ export function OfficeLayout({
               {/* Furniture hint sits behind the devices */}
               <Furniture room={room} />
 
-              <div className="relative flex items-start justify-between">
+              <div className="relative flex items-start justify-between gap-2">
                 <button
                   type="button"
                   onClick={() => onSelectRoom?.(room)}
-                  className="rounded-lg text-left outline-none transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan/50"
+                  className="min-w-0 rounded-lg text-left outline-none transition hover:opacity-80 focus-visible:ring-2 focus-visible:ring-cyan/50"
                   title={`Open ${formatRoomName(room)} details`}
                 >
                   <h3 className="text-sm font-semibold text-ink">
@@ -76,20 +76,27 @@ export function OfficeLayout({
                     on
                   </p>
                 </button>
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                    loadsOn > 0
-                      ? 'bg-amber/15 text-amber'
-                      : 'bg-white/5 text-faint'
-                  }`}
-                >
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  {isBusiest && (
+                    <span className="inline-flex items-center rounded-full border border-amber/25 bg-amber/10 px-2 py-0.5 text-[10px] font-semibold text-amber">
+                      Highest usage
+                    </span>
+                  )}
                   <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      loadsOn > 0 ? 'bg-amber' : 'bg-slate'
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      loadsOn > 0
+                        ? 'bg-amber/15 text-amber'
+                        : 'bg-white/5 text-faint'
                     }`}
-                  />
-                  {loadsOn > 0 ? 'Active' : 'Idle'}
-                </span>
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        loadsOn > 0 ? 'bg-amber' : 'bg-slate'
+                      }`}
+                    />
+                    {loadsOn > 0 ? 'Active' : 'Idle'}
+                  </span>
+                </div>
               </div>
 
               <div className="relative mt-4">
@@ -114,12 +121,6 @@ export function OfficeLayout({
                   ))}
                 </div>
               </div>
-
-              {isBusiest && (
-                <span className="relative mt-3 inline-block rounded-md bg-amber/10 px-2 py-0.5 text-[10px] font-medium text-amber">
-                  Highest usage
-                </span>
-              )}
             </div>
           )
         })}
